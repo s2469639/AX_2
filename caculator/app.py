@@ -51,7 +51,7 @@ EXCHANGE_API_KEY = (os.getenv("EXCHANGE_API_KEY") or "").strip()
 st.set_page_config(page_title="떠나자 해외여행", page_icon="✈️", layout="wide")
 
 # ==========================================
-# 5. 커스텀 CSS (에이투지체 + 톤온톤 스타일링)
+# 5. 커스텀 CSS (아이콘 폰트 보존 + 에이투지체 적용)
 # ==========================================
 font_face_css = ""
 if font_regular_b64:
@@ -77,10 +77,26 @@ st.markdown(f"""
 <style>
     {font_face_css}
 
-    /* 본문 및 전역 텍스트: 에이투지체 레귤러 */
-    html, body, [class*="css"], .stApp, p, div, span, label, input, button, select, [data-baseweb="tab"] {{
+    /* 1. 기본 본문 텍스트: 에이투지체 레귤러 */
+    html, body, .stApp, p, label, input, button, select, [data-baseweb="tab"] {{
         font-family: 'A2Z', -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif !important;
         font-weight: 400 !important;
+    }}
+
+    /* Streamlit 기본 머티리얼 아이콘 폰트 강제 보존 (화살표 텍스트 깨짐 및 글자 겹침 방지) */
+    [data-testid="stIconMaterial"], 
+    .material-symbols-rounded, 
+    .material-icons,
+    span[data-testid="stExpanderIcon"],
+    [data-testid="stExpanderToggleIcon"] {{
+        font-family: "Material Symbols Rounded", "Material Icons" !important;
+    }}
+
+    /* expander 아코디언 제목 및 내용 글씨체 지정 */
+    details[data-testid="stExpander"] summary p,
+    [data-testid="stExpanderDetails"] p,
+    [data-testid="stExpanderDetails"] div {{
+        font-family: 'A2Z', sans-serif !important;
     }}
 
     /* 전체 배경: 웜 그레이지 */
@@ -89,7 +105,7 @@ st.markdown(f"""
         color: #2F3E46 !important;
     }}
 
-    /* 제목 및 주요 헤더: 에이투지체 세미볼드 */
+    /* 2. 제목 및 주요 헤더: 에이투지체 세미볼드 */
     h1, h2, h3, h4, h5, h6,
     .stHeadingContainer h1, .stHeadingContainer h2, .stHeadingContainer h3,
     [data-testid="stMetricLabel"],
