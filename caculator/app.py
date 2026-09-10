@@ -1,14 +1,23 @@
 import os
 import requests
 import streamlit as st
+from pathlib import Path
 from dotenv import load_dotenv
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# 1. 환경 변수 로드
-load_dotenv()
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
-EXCHANGE_API_KEY = os.getenv("EXCHANGE_API_KEY")
+# 1. 환경 변수 로드 (절대 경로 지정으로 어디서 실행하든 .env를 찾도록 보강)
+BASE_DIR = Path(__file__).resolve().parent
+ENV_PATH = BASE_DIR / ".env"
+
+if ENV_PATH.exists():
+    load_dotenv(dotenv_path=ENV_PATH)
+else:
+    load_dotenv()
+
+# 키 값 앞뒤 공백 제거(strip) 처리
+OPENWEATHER_API_KEY = (os.getenv("OPENWEATHER_API_KEY") or "").strip()
+EXCHANGE_API_KEY = (os.getenv("EXCHANGE_API_KEY") or "").strip()
 
 # 2. 페이지 설정
 st.set_page_config(page_title="떠나자 해외여행", page_icon="✈️", layout="wide")
@@ -84,15 +93,13 @@ st.markdown("""
     }
 
     /* ==========================================
-       [모바일 반응형 최적화 (화면 폭 768px 이하)]
+       모바일 반응형 최적화 (화면 폭 768px 이하)
        ========================================== */
     @media (max-width: 768px) {
-        /* 타이틀 폰트 크기 조절 */
         h1 {
             font-size: 1.8rem !important;
         }
         
-        /* 다단 컬럼들이 모바일에서 세로로 자연스럽게 흐르도록 설정 */
         div[data-testid="column"] {
             width: 100% !important;
             flex: 1 1 100% !important;
@@ -100,12 +107,10 @@ st.markdown("""
             margin-bottom: 12px !important;
         }
 
-        /* 메트릭 폰트 크기 모바일 최적화 */
         [data-testid="stMetricValue"] {
             font-size: 1.15rem !important;
         }
 
-        /* 날씨 박스 패딩 축소 */
         .weather-box {
             padding: 12px 14px !important;
             gap: 12px !important;
@@ -118,7 +123,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 4. 여행지 데이터베이스 (취소선 방지: 물결 기호 전각 대시 '–' 및 '부터~까지' 명확화)
+# 4. 여행지 데이터베이스 (취소선 방지: 전각 대시 '–' 적용)
 DESTINATIONS = {
     "도쿄 (Tokyo, 일본)": {
         "city_en": "Tokyo",
@@ -206,7 +211,6 @@ DESTINATIONS = {
         "currency": "TWD",
         "timezone": "Asia/Taipei",
         "time_diff_desc": "한국보다 1시간 느림",
-        # [수정] 물결표 두 번으로 인한 취소선 오류 완전 해결
         "best_season": "10월–12월 및 3월–4월 (선선하고 걷기 좋은 기온)",
         "visa": "90일 무비자 입국",
         "voltage": "110V (11자 돼지코 어댑터 필요)",
@@ -260,7 +264,7 @@ DESTINATIONS = {
         "city_en": "Paris",
         "currency": "EUR",
         "timezone": "Europe/Paris",
-        "time_diff_desc": "한국보다 7~8시간 느림 (서머타임 적용)",
+        "time_diff_desc": "한국보다 7–8시간 느림 (서머타임 적용)",
         "best_season": "5월–6월 및 9월–10월 (맑은 하늘과 온화한 날씨)",
         "visa": "무비자 (솅겐 협약 90일)",
         "voltage": "230V (한국 2핀 플러그 호환)",
@@ -287,7 +291,7 @@ DESTINATIONS = {
         "city_en": "London",
         "currency": "GBP",
         "timezone": "Europe/London",
-        "time_diff_desc": "한국보다 8~9시간 느림",
+        "time_diff_desc": "한국보다 8–9시간 느림",
         "best_season": "6월–8월 (비가 적고 낮이 긴 초여름)",
         "visa": "6개월 무비자 입국",
         "voltage": "230V (영국식 3핀 G타입 어댑터 필수)",
@@ -314,7 +318,7 @@ DESTINATIONS = {
         "city_en": "Barcelona",
         "currency": "EUR",
         "timezone": "Europe/Madrid",
-        "time_diff_desc": "한국보다 7~8시간 느림",
+        "time_diff_desc": "한국보다 7–8시간 느림",
         "best_season": "5월–6월 및 9월–10월 (온화한 지중해성 날씨)",
         "visa": "무비자 (솅겐 협약 90일)",
         "voltage": "230V (한국 플러그 호환)",
@@ -341,7 +345,7 @@ DESTINATIONS = {
         "city_en": "New York",
         "currency": "USD",
         "timezone": "America/New_York",
-        "time_diff_desc": "한국보다 13~14시간 느림",
+        "time_diff_desc": "한국보다 13–14시간 느림",
         "best_season": "4월–5월 (봄꽃) 및 9월–11월 (선선한 가을 날씨)",
         "visa": "ESTA(전자여행허가) 사전 발급 필수",
         "voltage": "120V (11자 돼지코 어댑터 필요)",
@@ -368,7 +372,7 @@ DESTINATIONS = {
         "city_en": "Sydney",
         "currency": "AUD",
         "timezone": "Australia/Sydney",
-        "time_diff_desc": "한국보다 1~2시간 빠름",
+        "time_diff_desc": "한국보다 1–2시간 빠름",
         "best_season": "10월–11월 (봄 자카란다) 및 12월–2월 (따뜻한 여름)",
         "visa": "ETA(전자비자) 앱 사전 신청",
         "voltage": "240V (사선형 3핀 삼각 어댑터 필수)",
@@ -393,7 +397,7 @@ DESTINATIONS = {
     }
 }
 
-# 날씨 상태별 모던 SVG 벡터 아이콘
+# 날씨 상태별 모던 SVG 벡터 아이콘 매핑
 def get_weather_svg(main_status):
     status = (main_status or "").lower()
     if "clear" in status:
@@ -474,7 +478,7 @@ with col1:
             )
             res = requests.get(weather_url, timeout=5).json()
 
-            if res.get("cod") == 200:
+            if str(res.get("cod")) == "200":
                 temp = res["main"]["temp"]
                 feels_like = res["main"]["feels_like"]
                 humidity = res["main"]["humidity"]
@@ -498,11 +502,12 @@ with col1:
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                st.warning("날씨 정보를 불러오지 못했습니다.")
+                err_msg = res.get("message", "도시 정보를 찾을 수 없습니다.")
+                st.warning(f"날씨 데이터를 불러오지 못했습니다: {err_msg}")
         except Exception as e:
-            st.error(f"날씨 오류: {e}")
+            st.error(f"날씨 API 호출 오류: {e}")
     else:
-        st.info("`.env` 파일에 `OPENWEATHER_API_KEY`를 설정하면 날씨가 표시됩니다.")
+        st.info("💡 `.env` 파일에 `OPENWEATHER_API_KEY`를 설정하면 날씨가 표시됩니다.")
 
 # ==========================================
 # 2. 환율 & 계산기 섹션
