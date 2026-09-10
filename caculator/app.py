@@ -1,3 +1,4 @@
+import base64
 import os
 import requests
 import streamlit as st
@@ -5,11 +6,17 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import base64
-from pathlib import Path
 
-# 기존 경로 정의 아래에 추가
-# 탐색 순서: 최상위 폴더(PROJECT_ROOT) -> 현재 폴더(APP_DIR)
+# ==========================================
+# 1. 파일 및 디렉터리 경로 정의
+# ==========================================
+CURRENT_FILE = Path(__file__).resolve()
+APP_DIR = CURRENT_FILE.parent              # caculator 폴더
+PROJECT_ROOT = APP_DIR.parent             # AX_2 (최상위 루트 폴더)
+
+# ==========================================
+# 2. 폰트 Base64 인코딩 (에이투지체 로드)
+# ==========================================
 def get_font_base64(font_filename):
     for base_dir in [PROJECT_ROOT, APP_DIR]:
         font_path = base_dir / font_filename
@@ -21,12 +28,9 @@ def get_font_base64(font_filename):
 font_regular_b64 = get_font_base64("에이투지체-4Regular.ttf")
 font_semibold_b64 = get_font_base64("에이투지체-6SemiBold.ttf")
 
-# 1. 환경 변수 로드: app.py 위치 기준 상위 폴더(AX_2)의 .env 파일 로드
-CURRENT_FILE = Path(__file__).resolve()
-APP_DIR = CURRENT_FILE.parent              # caculator 폴더
-PROJECT_ROOT = APP_DIR.parent             # AX_2 (최상위 루트 폴더)
-
-# 루트 폴더의 .env를 우선 탐색하고, 없으면 현재 폴더 탐색
+# ==========================================
+# 3. 환경 변수 로드
+# ==========================================
 ROOT_ENV = PROJECT_ROOT / ".env"
 LOCAL_ENV = APP_DIR / ".env"
 
@@ -37,50 +41,60 @@ elif LOCAL_ENV.exists():
 else:
     load_dotenv()
 
-# 키 값 읽기 (공백 제거)
+# API 키 읽기 (공백 제거)
 OPENWEATHER_API_KEY = (os.getenv("OPENWEATHER_API_KEY") or "").strip()
 EXCHANGE_API_KEY = (os.getenv("EXCHANGE_API_KEY") or "").strip()
 
-# 2. 페이지 설정
+# ==========================================
+# 4. 페이지 설정
+# ==========================================
 st.set_page_config(page_title="떠나자 해외여행", page_icon="✈️", layout="wide")
 
-# 3. 뮤트톤 스타일 + 모바일 반응형 커스텀 CSS
-# 3. 에이투지체 적용 + 뮤트톤 스타일 + 모바일 반응형 커스텀 CSS
-st.markdown(f"""
-<style>
-    /* 폰트 등록 (에이투지체 Regular & SemiBold) */
+# ==========================================
+# 5. 커스텀 CSS (에이투지체 + 톤온톤 스타일링)
+# ==========================================
+font_face_css = ""
+if font_regular_b64:
+    font_face_css += f"""
     @font-face {{
         font-family: 'A2Z';
         src: url(data:font/truetype;charset=utf-8;base64,{font_regular_b64}) format('truetype');
         font-weight: 400;
         font-style: normal;
     }}
-
+    """
+if font_semibold_b64:
+    font_face_css += f"""
     @font-face {{
         font-family: 'A2Z';
         src: url(data:font/truetype;charset=utf-8;base64,{font_semibold_b64}) format('truetype');
         font-weight: 600;
         font-style: normal;
     }}
+    """
 
-    /* 1. 기본 본문: 에이투지체 Regular */
-    html, body, [class*="css"], .stApp, p, div, span, label, input, button, select {{
-        font-family: 'A2Z', -apple-system, BlinkMacSystemFont, sans-serif !important;
+st.markdown(f"""
+<style>
+    {font_face_css}
+
+    /* 본문 및 전역 텍스트: 에이투지체 레귤러 */
+    html, body, [class*="css"], .stApp, p, div, span, label, input, button, select, [data-baseweb="tab"] {{
+        font-family: 'A2Z', -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif !important;
         font-weight: 400 !important;
     }}
 
-    /* 전체 배경 톤 */
+    /* 전체 배경: 웜 그레이지 */
     .stApp {{
         background: linear-gradient(180deg, #F5F6F5 0%, #EBECE9 100%) !important;
         color: #2F3E46 !important;
     }}
 
-    /* 2. 모든 제목 및 주요 타이틀: 에이투지체 SemiBold */
+    /* 제목 및 주요 헤더: 에이투지체 세미볼드 */
     h1, h2, h3, h4, h5, h6,
     .stHeadingContainer h1, .stHeadingContainer h2, .stHeadingContainer h3,
     [data-testid="stMetricLabel"],
     [data-testid="stMetricValue"] {{
-        font-family: 'A2Z', sans-serif !important;
+        font-family: 'A2Z', -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif !important;
         font-weight: 600 !important;
         color: #354F52 !important;
     }}
@@ -138,7 +152,7 @@ st.markdown(f"""
         margin-top: 4px;
     }}
 
-    /* 모바일 반응형 최적화 */
+    /* 모바일 반응형 최적화 (화면 폭 768px 이하) */
     @media (max-width: 768px) {{
         h1 {{
             font-size: 1.8rem !important;
@@ -164,7 +178,9 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# 4. 여행지 데이터베이스 (취소선 방지: 전각 대시 '–' 적용)
+# ==========================================
+# 6. 여행지 데이터베이스
+# ==========================================
 DESTINATIONS = {
     "도쿄 (Tokyo, 일본)": {
         "city_en": "Tokyo",
@@ -465,7 +481,7 @@ def get_weather_svg(main_status):
         </svg>'''
 
 # ==========================================
-# 헤더 & 목적지 선택
+# 7. 헤더 & 목적지 선택
 # ==========================================
 st.title("✈️ 떠나자 해외여행")
 st.caption("실시간 날씨와 현지 시각, 환율 계산, 한국과의 물가 비교 및 테마별 여행 팁을 제공합니다.")
@@ -484,7 +500,7 @@ st.write("")
 col1, col2 = st.columns([1, 1], gap="medium")
 
 # ==========================================
-# 1. 날씨 & 시차 비교 섹션
+# 8. 날씨 & 시차 비교 섹션
 # ==========================================
 with col1:
     st.subheader(f"☀️ {city_data['city_en']} 날씨 & 시각")
@@ -493,7 +509,6 @@ with col1:
     kst_now = datetime.now(ZoneInfo("Asia/Seoul"))
     local_now = datetime.now(ZoneInfo(city_data["timezone"]))
 
-    # 1-1. 시차 비교 카드
     t1, t2 = st.columns(2)
     with t1:
         st.metric(
@@ -510,7 +525,6 @@ with col1:
 
     st.write("")
 
-    # 1-2. 모던 벡터 날씨 박스
     if OPENWEATHER_API_KEY:
         try:
             weather_url = (
@@ -551,7 +565,7 @@ with col1:
         st.info("💡 `.env` 파일에 `OPENWEATHER_API_KEY`를 설정하면 날씨가 표시됩니다.")
 
 # ==========================================
-# 2. 환율 & 계산기 섹션
+# 9. 환율 & 계산기 섹션
 # ==========================================
 with col2:
     st.subheader(f"💵 실시간 환율 & 환전 ({target_currency})")
@@ -601,7 +615,7 @@ with col2:
 st.divider()
 
 # ==========================================
-# 3. 여행 전 체크리스트 (시차/비자/물가)
+# 10. 여행 전 체크리스트
 # ==========================================
 st.subheader(f"🇰🇷 여행 전 필수 체크리스트 ({selected_city_name})")
 
@@ -625,13 +639,13 @@ st.caption(f"🚇 **교통패스 및 이동 꿀팁:** {city_data['transport_tip'
 st.divider()
 
 # ==========================================
-# 4. 테마별 관광지 & 대표 맛집
+# 11. 테마별 관광지 & 대표 맛집
 # ==========================================
 st.subheader(f"📍 {selected_city_name} 테마별 명소 & 대표 맛집")
 
 col_theme, col_food = st.columns([1.2, 1], gap="large")
 
-# 4-1. 테마별 관광지 (Tabs)
+# 11-1. 테마별 관광지 (Tabs)
 with col_theme:
     st.markdown("#### 🎯 여행 테마별 추천 코스")
     theme_tabs = st.tabs(list(city_data["themes"].keys()))
@@ -640,7 +654,7 @@ with col_theme:
             for s in spots:
                 st.markdown(f"- 🚩 **{s}**")
 
-# 4-2. 현지 대표 맛집
+# 11-2. 현지 대표 맛집
 with col_food:
     st.markdown("#### 🍽️ 현지 추천 맛집 & 팁")
     for r in city_data["restaurants"]:
