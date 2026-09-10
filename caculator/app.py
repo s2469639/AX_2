@@ -5,6 +5,21 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import base64
+from pathlib import Path
+
+# 기존 경로 정의 아래에 추가
+# 탐색 순서: 최상위 폴더(PROJECT_ROOT) -> 현재 폴더(APP_DIR)
+def get_font_base64(font_filename):
+    for base_dir in [PROJECT_ROOT, APP_DIR]:
+        font_path = base_dir / font_filename
+        if font_path.exists():
+            with open(font_path, "rb") as f:
+                return base64.b64encode(f.read()).decode("utf-8")
+    return None
+
+font_regular_b64 = get_font_base64("에이투지체-4Regular.ttf")
+font_semibold_b64 = get_font_base64("에이투지체-6SemiBold.ttf")
 
 # 1. 환경 변수 로드: app.py 위치 기준 상위 폴더(AX_2)의 .env 파일 로드
 CURRENT_FILE = Path(__file__).resolve()
@@ -30,50 +45,74 @@ EXCHANGE_API_KEY = (os.getenv("EXCHANGE_API_KEY") or "").strip()
 st.set_page_config(page_title="떠나자 해외여행", page_icon="✈️", layout="wide")
 
 # 3. 뮤트톤 스타일 + 모바일 반응형 커스텀 CSS
-st.markdown("""
+# 3. 에이투지체 적용 + 뮤트톤 스타일 + 모바일 반응형 커스텀 CSS
+st.markdown(f"""
 <style>
-    /* 전체 배경: 웜 그레이지 */
-    .stApp {
+    /* 폰트 등록 (에이투지체 Regular & SemiBold) */
+    @font-face {{
+        font-family: 'A2Z';
+        src: url(data:font/truetype;charset=utf-8;base64,{font_regular_b64}) format('truetype');
+        font-weight: 400;
+        font-style: normal;
+    }}
+
+    @font-face {{
+        font-family: 'A2Z';
+        src: url(data:font/truetype;charset=utf-8;base64,{font_semibold_b64}) format('truetype');
+        font-weight: 600;
+        font-style: normal;
+    }}
+
+    /* 1. 기본 본문: 에이투지체 Regular */
+    html, body, [class*="css"], .stApp, p, div, span, label, input, button, select {{
+        font-family: 'A2Z', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 400 !important;
+    }}
+
+    /* 전체 배경 톤 */
+    .stApp {{
         background: linear-gradient(180deg, #F5F6F5 0%, #EBECE9 100%) !important;
         color: #2F3E46 !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif;
-    }
+    }}
 
-    h1, h2, h3, h4 {
+    /* 2. 모든 제목 및 주요 타이틀: 에이투지체 SemiBold */
+    h1, h2, h3, h4, h5, h6,
+    .stHeadingContainer h1, .stHeadingContainer h2, .stHeadingContainer h3,
+    [data-testid="stMetricLabel"],
+    [data-testid="stMetricValue"] {{
+        font-family: 'A2Z', sans-serif !important;
+        font-weight: 600 !important;
         color: #354F52 !important;
-        font-weight: 700 !important;
-    }
+    }}
 
-    /* 메트릭 텍스트 줄바꿈 및 뮤트 폰트 */
-    [data-testid="stMetricValue"] {
+    /* 메트릭 텍스트 줄바꿈 및 색상 */
+    [data-testid="stMetricValue"] {{
         white-space: normal !important;
         word-break: keep-all !important;
         font-size: 1.35rem !important;
-        font-weight: 700 !important;
         color: #2F3E46 !important;
-    }
-    [data-testid="stMetricLabel"] {
+    }}
+    [data-testid="stMetricLabel"] {{
         white-space: normal !important;
         word-break: keep-all !important;
         color: #52796F !important;
-        font-weight: 600 !important;
-    }
+    }}
 
     /* 슬라이더 바 세이지 톤온톤 */
-    div[data-baseweb="slider"] > div > div { background-color: #DDE2DA !important; }
-    div[data-baseweb="slider"] > div > div > div { background-color: #728B80 !important; }
-    div[data-baseweb="slider"] [role="slider"] {
+    div[data-baseweb="slider"] > div > div {{ background-color: #DDE2DA !important; }}
+    div[data-baseweb="slider"] > div > div > div {{ background-color: #728B80 !important; }}
+    div[data-baseweb="slider"] [role="slider"] {{
         background-color: #587166 !important;
         border: 2px solid #FFFFFF !important;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12) !important;
-    }
-    div[data-baseweb="popover"] div, div[role="tooltip"] {
+    }}
+    div[data-baseweb="popover"] div, div[role="tooltip"] {{
         background-color: #4A5D54 !important;
         color: #F8F9FA !important;
-    }
+    }}
 
     /* 날씨 모던 배지 */
-    .weather-box {
+    .weather-box {{
         display: flex;
         align-items: center;
         gap: 16px;
@@ -81,14 +120,14 @@ st.markdown("""
         padding: 14px 18px;
         border-radius: 12px;
         border: 1px solid #D8DDD6;
-    }
-    .weather-svg {
+    }}
+    .weather-svg {{
         width: 60px;
         height: 60px;
         flex-shrink: 0;
         filter: drop-shadow(0 4px 6px rgba(0,0,0,0.06));
-    }
-    .weather-desc-badge {
+    }}
+    .weather-desc-badge {{
         display: inline-block;
         background-color: #E2E8E4;
         color: #354F52;
@@ -97,31 +136,31 @@ st.markdown("""
         font-size: 0.8rem;
         font-weight: 600;
         margin-top: 4px;
-    }
+    }}
 
-    /* 모바일 반응형 최적화 (화면 폭 768px 이하) */
-    @media (max-width: 768px) {
-        h1 {
+    /* 모바일 반응형 최적화 */
+    @media (max-width: 768px) {{
+        h1 {{
             font-size: 1.8rem !important;
-        }
-        div[data-testid="column"] {
+        }}
+        div[data-testid="column"] {{
             width: 100% !important;
             flex: 1 1 100% !important;
             min-width: 100% !important;
             margin-bottom: 12px !important;
-        }
-        [data-testid="stMetricValue"] {
+        }}
+        [data-testid="stMetricValue"] {{
             font-size: 1.15rem !important;
-        }
-        .weather-box {
+        }}
+        .weather-box {{
             padding: 12px 14px !important;
             gap: 12px !important;
-        }
-        .weather-svg {
+        }}
+        .weather-svg {{
             width: 50px !important;
             height: 50px !important;
-        }
-    }
+        }}
+    }}
 </style>
 """, unsafe_allow_html=True)
 
