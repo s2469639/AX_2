@@ -6,16 +6,23 @@ from dotenv import load_dotenv
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# 1. 환경 변수 로드 (절대 경로 지정으로 어디서 실행하든 .env를 찾도록 보강)
-BASE_DIR = Path(__file__).resolve().parent
-ENV_PATH = BASE_DIR / ".env"
+# 1. 환경 변수 로드: app.py 위치 기준 상위 폴더(AX_2)의 .env 파일 로드
+CURRENT_FILE = Path(__file__).resolve()
+APP_DIR = CURRENT_FILE.parent              # caculator 폴더
+PROJECT_ROOT = APP_DIR.parent             # AX_2 (최상위 루트 폴더)
 
-if ENV_PATH.exists():
-    load_dotenv(dotenv_path=ENV_PATH)
+# 루트 폴더의 .env를 우선 탐색하고, 없으면 현재 폴더 탐색
+ROOT_ENV = PROJECT_ROOT / ".env"
+LOCAL_ENV = APP_DIR / ".env"
+
+if ROOT_ENV.exists():
+    load_dotenv(dotenv_path=ROOT_ENV)
+elif LOCAL_ENV.exists():
+    load_dotenv(dotenv_path=LOCAL_ENV)
 else:
     load_dotenv()
 
-# 키 값 앞뒤 공백 제거(strip) 처리
+# 키 값 읽기 (공백 제거)
 OPENWEATHER_API_KEY = (os.getenv("OPENWEATHER_API_KEY") or "").strip()
 EXCHANGE_API_KEY = (os.getenv("EXCHANGE_API_KEY") or "").strip()
 
@@ -92,25 +99,20 @@ st.markdown("""
         margin-top: 4px;
     }
 
-    /* ==========================================
-       모바일 반응형 최적화 (화면 폭 768px 이하)
-       ========================================== */
+    /* 모바일 반응형 최적화 (화면 폭 768px 이하) */
     @media (max-width: 768px) {
         h1 {
             font-size: 1.8rem !important;
         }
-        
         div[data-testid="column"] {
             width: 100% !important;
             flex: 1 1 100% !important;
             min-width: 100% !important;
             margin-bottom: 12px !important;
         }
-
         [data-testid="stMetricValue"] {
             font-size: 1.15rem !important;
         }
-
         .weather-box {
             padding: 12px 14px !important;
             gap: 12px !important;
