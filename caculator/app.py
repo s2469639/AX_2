@@ -13,10 +13,10 @@ EXCHANGE_API_KEY = os.getenv("EXCHANGE_API_KEY")
 # 2. 페이지 설정
 st.set_page_config(page_title="떠나자 해외여행", page_icon="✈️", layout="wide")
 
-# 3. 뮤트톤 스타일 & 모던 날씨 카드 전용 CSS
+# 3. 뮤트톤 스타일 + 모바일 반응형 커스텀 CSS
 st.markdown("""
 <style>
-    /* 전체 배경: 은은한 웜 그레이지 */
+    /* 전체 배경: 웜 그레이지 */
     .stApp {
         background: linear-gradient(180deg, #F5F6F5 0%, #EBECE9 100%) !important;
         color: #2F3E46 !important;
@@ -28,7 +28,7 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    /* 메트릭 줄바꿈 및 뮤트 폰트 */
+    /* 메트릭 텍스트 줄바꿈 및 뮤트 폰트 */
     [data-testid="stMetricValue"] {
         white-space: normal !important;
         word-break: keep-all !important;
@@ -56,42 +56,76 @@ st.markdown("""
         color: #F8F9FA !important;
     }
 
-    /* 세련된 날씨 모던 배지 */
+    /* 날씨 모던 배지 */
     .weather-box {
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 16px;
         background: rgba(255, 255, 255, 0.65);
-        padding: 16px 20px;
+        padding: 14px 18px;
         border-radius: 12px;
         border: 1px solid #D8DDD6;
     }
     .weather-svg {
-        width: 68px;
-        height: 68px;
+        width: 60px;
+        height: 60px;
+        flex-shrink: 0;
         filter: drop-shadow(0 4px 6px rgba(0,0,0,0.06));
     }
     .weather-desc-badge {
         display: inline-block;
         background-color: #E2E8E4;
         color: #354F52;
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-size: 0.82rem;
+        padding: 2px 8px;
+        border-radius: 16px;
+        font-size: 0.8rem;
         font-weight: 600;
         margin-top: 4px;
+    }
+
+    /* ==========================================
+       [모바일 반응형 최적화 (화면 폭 768px 이하)]
+       ========================================== */
+    @media (max-width: 768px) {
+        /* 타이틀 폰트 크기 조절 */
+        h1 {
+            font-size: 1.8rem !important;
+        }
+        
+        /* 다단 컬럼들이 모바일에서 세로로 자연스럽게 흐르도록 설정 */
+        div[data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 100% !important;
+            margin-bottom: 12px !important;
+        }
+
+        /* 메트릭 폰트 크기 모바일 최적화 */
+        [data-testid="stMetricValue"] {
+            font-size: 1.15rem !important;
+        }
+
+        /* 날씨 박스 패딩 축소 */
+        .weather-box {
+            padding: 12px 14px !important;
+            gap: 12px !important;
+        }
+        .weather-svg {
+            width: 50px !important;
+            height: 50px !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 4. 여행지 데이터베이스 (시차 타임존, 최적 여행 시기, 테마별 관광지 포함)
+# 4. 여행지 데이터베이스 (취소선 방지: 물결 기호 전각 대시 '–' 및 '부터~까지' 명확화)
 DESTINATIONS = {
     "도쿄 (Tokyo, 일본)": {
         "city_en": "Tokyo",
         "currency": "JPY",
         "timezone": "Asia/Tokyo",
         "time_diff_desc": "한국과 시차 없음 (동일)",
-        "best_season": "3월~5월 (벚꽃), 10월~11월 (단풍과 쾌적한 날씨)",
+        "best_season": "3월–5월 (봄 벚꽃), 10월–11월 (단풍과 쾌적한 날씨)",
         "visa": "90일 무비자 입국",
         "voltage": "100V (11자 돼지코 어댑터 필요)",
         "tipping": "팁 문화 없음 (영수증 정가 지불)",
@@ -118,7 +152,7 @@ DESTINATIONS = {
         "currency": "JPY",
         "timezone": "Asia/Tokyo",
         "time_diff_desc": "한국과 시차 없음 (동일)",
-        "best_season": "3월~5월 (봄 벚꽃), 9월~11월 (가을 선선함)",
+        "best_season": "3월–5월 (봄 벚꽃), 9월–11월 (선선한 가을 날씨)",
         "visa": "90일 무비자 입국",
         "voltage": "100V (11자 돼지코 어댑터 필요)",
         "tipping": "팁 문화 없음",
@@ -145,7 +179,7 @@ DESTINATIONS = {
         "currency": "VND",
         "timezone": "Asia/Ho_Chi_Minh",
         "time_diff_desc": "한국보다 2시간 느림",
-        "best_season": "2월~5월 (건기로 비가 적고 쾌적함)",
+        "best_season": "2월–5월 (건기 시즌으로 비가 적고 쾌적함)",
         "visa": "45일 무비자 입국",
         "voltage": "220V (한국 전자제품 호환)",
         "tipping": "의무는 아니나 마사지샵은 2~5만동 매너 팁 일반적",
@@ -172,7 +206,8 @@ DESTINATIONS = {
         "currency": "TWD",
         "timezone": "Asia/Taipei",
         "time_diff_desc": "한국보다 1시간 느림",
-        "best_season": "10월~12월, 3월~4월 (선선하고 걷기 좋은 기온)",
+        # [수정] 물결표 두 번으로 인한 취소선 오류 완전 해결
+        "best_season": "10월–12월 및 3월–4월 (선선하고 걷기 좋은 기온)",
         "visa": "90일 무비자 입국",
         "voltage": "110V (11자 돼지코 어댑터 필요)",
         "tipping": "팁 문화 없음 (고급 식당만 10% 봉사료 부과)",
@@ -199,11 +234,11 @@ DESTINATIONS = {
         "currency": "THB",
         "timezone": "Asia/Bangkok",
         "time_diff_desc": "한국보다 2시간 느림",
-        "best_season": "11월~2월 (건기 시즌으로 가장 시원하고 쾌적)",
+        "best_season": "11월–2월 (건기 시즌으로 가장 시원하고 쾌적함)",
         "visa": "90일 무비자 입국",
         "voltage": "220V (한국 플러그 대부분 호환)",
         "tipping": "마사지샵 50~100바트, 호텔 벨보이 20~40바트 권장",
-        "transport_tip": "트래픽 잼 심함, 출퇴근 시간 지상철(BTS)/지하철(MRT) 이용",
+        "transport_tip": "출퇴근 시간에는 지상철(BTS)/지하철(MRT) 이용",
         "price_compare": {
             "땡모반 (수박주스)": "약 1,800~2,500원\n(시원하고 저렴)",
             "팟타이 1접시": "약 2,500~4,500원\n(야시장 기준)",
@@ -226,10 +261,10 @@ DESTINATIONS = {
         "currency": "EUR",
         "timezone": "Europe/Paris",
         "time_diff_desc": "한국보다 7~8시간 느림 (서머타임 적용)",
-        "best_season": "5월~6월, 9월~10월 (맑은 하늘과 온화한 날씨)",
+        "best_season": "5월–6월 및 9월–10월 (맑은 하늘과 온화한 날씨)",
         "visa": "무비자 (솅겐 협약 90일)",
         "voltage": "230V (한국 2핀 플러그 호환)",
-        "tipping": "청구서에 서비스 요금 포함 (보통 만족 시 1~2유로)",
+        "tipping": "청구서에 서비스 요금 포함 (만족 시 1~2유로 권장)",
         "transport_tip": "나비고 이지(Navigo Easy) 카드 충전 후 이용",
         "price_compare": {
             "에스프레소 1잔": "약 3,500~4,500원\n(스탠딩 바 권장)",
@@ -240,7 +275,7 @@ DESTINATIONS = {
             "🏛️ 랜드마크 & 박물관": ["루브르 박물관", "오르세 미술관", "개선문 & 샹젤리제"],
             "🛍️ 쇼핑 & 거리": ["마레 지구 빈티지 숍", "라파예트 백화점 본점"],
             "🌿 힐링 & 정원": ["튈르리 정원", "뤽상부르 공원 피크닉"],
-            "📸 인생샷 명소": ["샤요궁에서 바라보는 에펠탑", "몽마르트르 언덕 사크레쾨르 대성당"]
+            "📸 인생샷 명소": ["샤요궁에서 바라보는 에펠탑", "몽마르트르 언덕 사크레쾨르"]
         },
         "restaurants": [
             {"name": "Le Bouillon Chartier", "menu": "에스카르고, 오리 콩피", "tip": "100년 전통 최고의 가성비 클래식 식당"},
@@ -253,11 +288,11 @@ DESTINATIONS = {
         "currency": "GBP",
         "timezone": "Europe/London",
         "time_diff_desc": "한국보다 8~9시간 느림",
-        "best_season": "6월~8월 (비가 적고 해가 긴 초여름)",
+        "best_season": "6월–8월 (비가 적고 낮이 긴 초여름)",
         "visa": "6개월 무비자 입국",
         "voltage": "230V (영국식 3핀 G타입 어댑터 필수)",
         "tipping": "식당 영수증에 12.5% 서비스 차지가 자동 부과되는 편",
-        "transport_tip": "컨택리스(Contactless) 해외 카드로 지하철/버스 바로 태그",
+        "transport_tip": "컨택리스(Contactless) 해외 카드로 교통카드 태그",
         "price_compare": {
             "플랫화이트 커피 1잔": "약 6,000~7,500원\n(물가 체감 높음)",
             "지하철(Tube) 1회": "약 4,800원\n(교통비 비쌈)",
@@ -280,7 +315,7 @@ DESTINATIONS = {
         "currency": "EUR",
         "timezone": "Europe/Madrid",
         "time_diff_desc": "한국보다 7~8시간 느림",
-        "best_season": "5월~6월, 9월~10월 (온화한 지중해성 기후)",
+        "best_season": "5월–6월 및 9월–10월 (온화한 지중해성 날씨)",
         "visa": "무비자 (솅겐 협약 90일)",
         "voltage": "230V (한국 플러그 호환)",
         "tipping": "원칙적으로 팁 의무 없음 (잔돈 1~2유로 남기는 편)",
@@ -307,9 +342,9 @@ DESTINATIONS = {
         "currency": "USD",
         "timezone": "America/New_York",
         "time_diff_desc": "한국보다 13~14시간 느림",
-        "best_season": "4월~5월 (봄꽃), 9월~11월 (선선한 가을 날씨)",
+        "best_season": "4월–5월 (봄꽃) 및 9월–11월 (선선한 가을 날씨)",
         "visa": "ESTA(전자여행허가) 사전 발급 필수",
-        "voltage": "120V (11자 돼지코 어댑터 필수)",
+        "voltage": "120V (11자 돼지코 어댑터 필요)",
         "tipping": "팁 필수 (테이블 서빙 식당 18% ~ 22%)",
         "transport_tip": "OMNY 비접촉 결제 카드로 지하철 직접 태그",
         "price_compare": {
@@ -334,7 +369,7 @@ DESTINATIONS = {
         "currency": "AUD",
         "timezone": "Australia/Sydney",
         "time_diff_desc": "한국보다 1~2시간 빠름",
-        "best_season": "10월~11월 (봄 자카란다), 12월~2월 (따뜻한 해변 여름)",
+        "best_season": "10월–11월 (봄 자카란다) 및 12월–2월 (따뜻한 여름)",
         "visa": "ETA(전자비자) 앱 사전 신청",
         "voltage": "240V (사선형 3핀 삼각 어댑터 필수)",
         "tipping": "원칙적으로 팁 문화 없음",
@@ -358,33 +393,28 @@ DESTINATIONS = {
     }
 }
 
-# 날씨 상태별 모던 SVG 벡터 아이콘 매핑
+# 날씨 상태별 모던 SVG 벡터 아이콘
 def get_weather_svg(main_status):
     status = (main_status or "").lower()
     if "clear" in status:
-        # 모던 선샤인 아이콘
         return '''<svg class="weather-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="32" cy="32" r="14" fill="#E0A96D"/>
             <path d="M32 8V14M32 50V56M8 32H14M50 32H56M15 15L19.2 19.2M44.8 44.8L49 49M15 49L19.2 44.8M44.8 19.2L49 15" stroke="#E0A96D" stroke-width="4" stroke-linecap="round"/>
         </svg>'''
     elif "cloud" in status:
-        # 세련된 소프트 구름 아이콘
         return '''<svg class="weather-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M46 44H20C14.4772 44 10 39.5228 10 34C10 28.7956 13.9749 24.5194 19.0641 24.0485C20.6725 17.1592 26.8377 12 34.2 12C42.8156 12 49.845 18.7308 50.1837 27.2348C54.606 28.1887 58 32.0911 58 36.8C58 42.1019 53.7019 46.4 48.4 46.4" fill="#9BA4B5" opacity="0.85"/>
         </svg>'''
     elif "rain" in status or "drizzle" in status:
-        # 비 구름 아이콘
         return '''<svg class="weather-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M44 36H20C15.5817 36 12 32.4183 12 28C12 23.8365 15.1799 20.4155 19.2513 20.0388C20.538 14.5274 25.4702 10.4 31.36 10.4C38.2525 10.4 43.876 15.7846 44.147 22.5878C47.6848 23.3509 50.4 26.4729 50.4 30.24C50.4 34.4815 46.9615 37.92 42.72 37.92" fill="#7895B2"/>
             <path d="M22 44L18 52M32 44L28 52M42 44L38 52" stroke="#6096B4" stroke-width="3.5" stroke-linecap="round"/>
         </svg>'''
     elif "snow" in status:
-        # 눈송이 아이콘
         return '''<svg class="weather-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M32 12V52M12 32H52M18 18L46 46M18 46L46 18" stroke="#93BFCF" stroke-width="4" stroke-linecap="round"/>
         </svg>'''
     else:
-        # 기본 대기/안개
         return '''<svg class="weather-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M14 24H50M10 32H54M18 40H46" stroke="#8997A5" stroke-width="4" stroke-linecap="round"/>
         </svg>'''
@@ -412,7 +442,7 @@ col1, col2 = st.columns([1, 1], gap="medium")
 # 1. 날씨 & 시차 비교 섹션
 # ==========================================
 with col1:
-    st.subheader(f"☀️ {city_data['city_en']} 날씨 & 현재 시각")
+    st.subheader(f"☀️ {city_data['city_en']} 날씨 & 시각")
 
     # 한국 시각 & 현지 시각 계산
     kst_now = datetime.now(ZoneInfo("Asia/Seoul"))
@@ -457,8 +487,8 @@ with col1:
                 <div class="weather-box">
                     <div>{svg_icon}</div>
                     <div>
-                        <div style="font-size: 1.6rem; font-weight: 700; color: #2F3E46;">
-                            {temp:.1f} °C <span style="font-size: 0.95rem; font-weight: 500; color: #64748B;">(체감 {feels_like:.1f} °C)</span>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #2F3E46;">
+                            {temp:.1f} °C <span style="font-size: 0.9rem; font-weight: 500; color: #64748B;">(체감 {feels_like:.1f} °C)</span>
                         </div>
                         <div>
                             <span class="weather-desc-badge">{desc.capitalize()}</span>
@@ -525,11 +555,10 @@ with col2:
 st.divider()
 
 # ==========================================
-# 3. 한국 비교, 최적 시기 & 물가 체크리스트
+# 3. 여행 전 체크리스트 (시차/비자/물가)
 # ==========================================
 st.subheader(f"🇰🇷 여행 전 필수 체크리스트 ({selected_city_name})")
 
-# 최적 시기, 비자, 전압, 팁
 c1, c2, c3, c4 = st.columns(4)
 c1.info(f"🗓️ **추천 여행 시기**\n\n{city_data['best_season']}")
 c2.info(f"🛂 **비자 규정**\n\n{city_data['visa']}")
@@ -550,13 +579,13 @@ st.caption(f"🚇 **교통패스 및 이동 꿀팁:** {city_data['transport_tip'
 st.divider()
 
 # ==========================================
-# 4. 테마별 관광지 추천 & 현지 맛집
+# 4. 테마별 관광지 & 대표 맛집
 # ==========================================
 st.subheader(f"📍 {selected_city_name} 테마별 명소 & 대표 맛집")
 
 col_theme, col_food = st.columns([1.2, 1], gap="large")
 
-# 4-1. 테마별 관광지 (Tabs 적용)
+# 4-1. 테마별 관광지 (Tabs)
 with col_theme:
     st.markdown("#### 🎯 여행 테마별 추천 코스")
     theme_tabs = st.tabs(list(city_data["themes"].keys()))
