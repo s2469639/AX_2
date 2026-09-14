@@ -23,10 +23,10 @@ w1, w2, w3 = st.columns(3)
 
 def display_weather_metric(col, city_name, data):
     with col:
-        if data and "main" in data:
-            temp = data["main"].get("temp", "-")
-            weather_desc = data["weather"][0].get("description", "") if data.get("weather") else ""
-            humidity = data["main"].get("humidity", "-")
+        if data and "temp" in data:
+            temp = data.get("temp", "-")
+            weather_desc = data.get("description", "")
+            humidity = data.get("humidity", "-")
             st.metric(label=city_name, value=f"{temp}°C", delta=weather_desc)
             st.caption(f"습도: {humidity}%")
         else:
@@ -38,8 +38,8 @@ display_weather_metric(w3, "제주 (Jeju)", get_weather("Jeju"))
 
 st.divider()
 
-# 2. 카카오 지도 및 장소 탐색
-st.markdown("#### 🗺️ 카카오 지도 & 스마트 장소 탐색")
+# 2. 지도 및 장소 탐색
+st.markdown("#### 🗺️ 스마트 장소 탐색 및 지도")
 
 preset_spots = {
     "경복궁": {"lat": 37.5796, "lng": 126.9770, "address": "서울 종로구 사직로 161", "url": "https://place.map.kakao.com/8129210"},
@@ -107,20 +107,17 @@ with col_left:
                         st.link_button("카카오맵 열기", p["url"])
 
 with col_right:
-    st.subheader("🗺️ 카카오 지도 실시간 뷰")
+    st.subheader("🗺️ 실시간 지도 뷰")
     
-    # 카카오 JavaScript 키 조회
+    # render_kakao_map 함수 호출 (Folium 기반 교체 시 js_key 불필요)
     kakao_js_key = os.getenv("MAP_API_KEY", "")
     
-    if kakao_js_key:
-        render_kakao_map(
-            js_key=kakao_js_key,
-            lat=target_lat,
-            lng=target_lng,
-            name=target_name,
-            addr=target_addr,
-            places=nearby_list,
-            is_interactive=True
-        )
-    else:
-        st.error("카카오 지도 JavaScript 키(MAP_API_KEY)가 설정되지 않았습니다.")
+    render_kakao_map(
+        js_key=kakao_js_key,
+        lat=target_lat,
+        lng=target_lng,
+        name=target_name,
+        addr=target_addr,
+        places=nearby_list,
+        is_interactive=True
+    )
