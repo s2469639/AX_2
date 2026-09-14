@@ -1,13 +1,100 @@
+import sys
+from pathlib import Path
+import pandas as pd
+import pydeck as pdk
 import streamlit as st
-from src.api.weather import get_weather
-from src.api.kakao import search_places_kakao, search_category_kakao
-from src.components.kakao_map import render_kakao_map
 
+# 1. 실행 경로 보정 (어디서 실행되든 step6 폴더를 모듈 경로에 강제 등록)
+CURRENT_FILE = Path(__file__).resolve()
+STEP6_DIR = CURRENT_FILE.parent.parent.parent  # Travel_project/step6 위치
+if str(STEP6_DIR) not in sys.path:
+    sys.path.insert(0, str(STEP6_DIR))
+
+# 2. 내부 API 모듈 로드
+try:
+    from src.api.weather import get_weather
+    from src.api.kakao import search_places_kakao, search_category_kakao
+except ImportError:
+    # 경로가 다를 경우 대비 상대 경로 보정
+    from api.weather import get_weather
+    from api.kakao import search_places_kakao, search_category_kakao
+
+
+# 3. [핵심] 지도 렌더링 함수 내장 (ImportError 원천 차단)
+def render_kakao_map(lat: float, lng: float, name: str, addr: str, places: list, is_interactive: bool = True):
+    """
+    pydeck 기반 순수 Streamlit 반응형 지도
+    - 빨간색: 중심 명소
+    - 파란색: 주변 편의시설 (맛집/카페/편의점)
+    """
+    data = [{
+        "name": f"📍 {name}",
+        "address": addr,
+        "phone": "-",
+        "lat": float(lat),
+        "lng": float(lng),
+        "color": [239, 68, 68, 220],
+        "radius": 18
+    }]
+    
+    if places:
+        for p in places:
+            data.append({
+                "name": p.get("name", "장소"),
+                "address": p.get("address", ""),
+                "phone": p.get("phone", "") or "전화번호 정보 없음",
+                "lat": float(p.get("lat")),
+                "lng": float(p.get("lng")),
+                "color": [37, 99, 235, 200],
+                "radius": 14
+            })
+            
+    df = pd.DataFrame(data)
+    
+    view_state = pdk.ViewState(
+        latitude=lat,
+        longitude=lng,
+        zoom=14 if is_interactive else 13,
+        pitch=0
+    )
+    
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        data=df,
+        get_position=["lng", "lat"],
+        get_color="color",
+        get_radius="radius",
+        radius_min_pixels=6,
+        radius_max_pixels=25,
+        pickable=True
+    )
+    
+    tooltip = {
+        "html": "<b>{name}</b><br/>주소: {address}<br/>전화: {phone}",
+        "style": {
+            "backgroundColor": "#1e293b",
+            "color": "white",
+            "fontSize": "12px",
+            "borderRadius": "8px",
+            "padding": "8px 12px"
+        }
+    }
+    
+    deck = pdk.Deck(
+        layers=[layer],
+        initial_view_state=view_state,
+        tooltip=tooltip,
+        map_style="light"
+    )
+    st.pydeck_chart(deck, height=580)
+
+
+# --- 4. 화면 UI 렌더링 시작 ---
 st.title("🇰🇷 대한민국 여행 센터 (Home)")
 st.link_button("🌐 대한민국 구석구석 (한국관광공사 공식)", "https://korean.visitkorea.or.kr")
 st.write("")
 
-# 1. 상단 날씨 섹션
+# 날씨 위젯
 st.markdown("#### 🌤️ 국내 주요 거점 실시간 날씨")
 w1, w2, w3 = st.columns(3)
 
@@ -28,7 +115,7 @@ display_weather_metric(w3, "제주 (Jeju)", get_weather("Jeju"))
 
 st.divider()
 
-# 2. 지도 및 탐색 섹션 (좌측: 검색 및 목록 / 우측: 지도)
+# 탐색 및 지도 섹션
 st.markdown("#### 🗺️ 대한민국 스마트 맵 & 장소 탐색")
 
 preset_spots = {
@@ -39,7 +126,6 @@ preset_spots = {
 
 col_left, col_right = st.columns([5, 7], gap="medium")
 
-# --- 좌측 패널 ---
 with col_left:
     st.subheader("🔍 장소 탐색")
     user_query = st.text_input("직접 검색", placeholder="예: 강남역, 명동교자 입력 후 Enter")
@@ -51,7 +137,6 @@ with col_left:
     target_addr = preset_spots[preset_choice]["address"]
     target_url = preset_spots[preset_choice]["url"]
 
-    # 키워드 검색 결과 처리
     if user_query.strip():
         search_res = search_places_kakao(user_query.strip())
         if search_res:
@@ -68,7 +153,6 @@ with col_left:
         else:
             st.warning("검색 결과가 없어 기본 선택 장소로 유지합니다.")
 
-    # 선택된 장소 정보 카드 (순수 Streamlit 컨테이너)
     with st.container(border=True):
         st.caption("선택된 중심 장소")
         st.markdown(f"### 📍 {target_name}")
@@ -76,7 +160,6 @@ with col_left:
         if target_url:
             st.link_button("카카오맵 상세 정보 보기 ↗", target_url)
 
-    # 주변 편의시설 필터
     selected_cat = st.radio(
         "주변 편의시설 필터링 (반경 1.5km)",
         ["선택 안 함", "🍴 식당 (맛집)", "☕ 카페", "🏪 편의점"],
@@ -88,7 +171,6 @@ with col_left:
     if selected_cat in cat_codes:
         nearby_list = search_category_kakao(cat_codes[selected_cat], target_lat, target_lng)
 
-    # 탐색된 주변 시설 목록 뷰
     if nearby_list:
         st.markdown(f"**주변 탐색 결과 ({len(nearby_list)}곳)**")
         with st.container(height=260):
@@ -101,7 +183,6 @@ with col_left:
                     if p.get("url"):
                         st.link_button("카카오맵 열기", p["url"])
 
-# --- 우측 패널 (순수 지도) ---
 with col_right:
     st.subheader("🗺️ 실시간 지도 뷰")
     st.caption("🔴 중심 장소 | 🔵 주변 시설 (마우스 호버 시 상세 정보 표시)")
