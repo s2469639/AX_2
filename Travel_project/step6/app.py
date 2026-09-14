@@ -21,7 +21,7 @@ def get_key(name: str) -> str:
     return (val or "").strip()
 
 OPENWEATHER_API_KEY = get_key("OPENWEATHER_API_KEY")
-EXCHANGERATE_API_KEY = get_key("EXCHANGE_API_KEY")
+EXCHANGERATE_API_KEY = get_key("EXCHANGERATE_API_KEY")
 KAKAO_REST_API_KEY = get_key("KAKAO_REST_API_KEY") or get_key("KAKAO_REST_KEY")
 KAKAO_JS_API_KEY = get_key("KAKAO_JS_API_KEY") or get_key("MAP_API_KEY")
 
