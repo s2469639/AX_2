@@ -1,7 +1,7 @@
 # ✈️ All-in-One Travel Dashboard
 
 Streamlit 기반의 다기능 여행 정보 통합 대시보드입니다.  
-국내외 실시간 날씨, 스프레드가 적용된 정밀 환율 계산기, 실시간 시차 비교, 그리고 카카오맵 기반의 스마트 위치 검색 및 주변 편의시설 탐색 기능을 제공합니다.
+국내외 실시간 날씨, 스프레드가 적용된 정밀 환율 계산기, 실시간 시차 비교, 그리고 카카오맵api 기반의 스마트 위치 검색 및 주변 편의시설 탐색 기능을 제공합니다.
 
 ---
 
@@ -27,7 +27,7 @@ Streamlit 기반의 다기능 여행 정보 통합 대시보드입니다.
 
 ## 🛠️ 기술 스택 (Tech Stack)
 
-- **Frontend / Framework:** `Streamlit` (`st.Page`, `st.navigation`, `st.iframe`)
+- **Frontend / Framework:** `Streamlit` (`st.Page`, `st.navigation`)
 - **Language:** Python 3.10+
 - **API & Network:** `requests`, `python-dotenv`
 - **Timezone:** Python 내장 `zoneinfo` (IANA Time Zone Database)
