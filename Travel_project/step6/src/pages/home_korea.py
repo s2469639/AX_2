@@ -1,100 +1,23 @@
+import os
 import sys
 from pathlib import Path
-import pandas as pd
-import pydeck as pdk
 import streamlit as st
 
-# 1. 실행 경로 보정 (어디서 실행되든 step6 폴더를 모듈 경로에 강제 등록)
+# 모듈 경로 보정
 CURRENT_FILE = Path(__file__).resolve()
-STEP6_DIR = CURRENT_FILE.parent.parent.parent  # Travel_project/step6 위치
+STEP6_DIR = CURRENT_FILE.parent.parent.parent
 if str(STEP6_DIR) not in sys.path:
     sys.path.insert(0, str(STEP6_DIR))
 
-# 2. 내부 API 모듈 로드
-try:
-    from src.api.weather import get_weather
-    from src.api.kakao import search_places_kakao, search_category_kakao
-except ImportError:
-    # 경로가 다를 경우 대비 상대 경로 보정
-    from api.weather import get_weather
-    from api.kakao import search_places_kakao, search_category_kakao
+from src.api.weather import get_weather
+from src.api.kakao import search_places_kakao, search_category_kakao
+from src.components.kakao_map import render_kakao_map
 
-
-# 3. [핵심] 지도 렌더링 함수 내장 (ImportError 원천 차단)
-def render_kakao_map(lat: float, lng: float, name: str, addr: str, places: list, is_interactive: bool = True):
-    """
-    pydeck 기반 순수 Streamlit 반응형 지도
-    - 빨간색: 중심 명소
-    - 파란색: 주변 편의시설 (맛집/카페/편의점)
-    """
-    data = [{
-        "name": f"📍 {name}",
-        "address": addr,
-        "phone": "-",
-        "lat": float(lat),
-        "lng": float(lng),
-        "color": [239, 68, 68, 220],
-        "radius": 18
-    }]
-    
-    if places:
-        for p in places:
-            data.append({
-                "name": p.get("name", "장소"),
-                "address": p.get("address", ""),
-                "phone": p.get("phone", "") or "전화번호 정보 없음",
-                "lat": float(p.get("lat")),
-                "lng": float(p.get("lng")),
-                "color": [37, 99, 235, 200],
-                "radius": 14
-            })
-            
-    df = pd.DataFrame(data)
-    
-    view_state = pdk.ViewState(
-        latitude=lat,
-        longitude=lng,
-        zoom=14 if is_interactive else 13,
-        pitch=0
-    )
-    
-    layer = pdk.Layer(
-        "ScatterplotLayer",
-        data=df,
-        get_position=["lng", "lat"],
-        get_color="color",
-        get_radius="radius",
-        radius_min_pixels=6,
-        radius_max_pixels=25,
-        pickable=True
-    )
-    
-    tooltip = {
-        "html": "<b>{name}</b><br/>주소: {address}<br/>전화: {phone}",
-        "style": {
-            "backgroundColor": "#1e293b",
-            "color": "white",
-            "fontSize": "12px",
-            "borderRadius": "8px",
-            "padding": "8px 12px"
-        }
-    }
-    
-    deck = pdk.Deck(
-        layers=[layer],
-        initial_view_state=view_state,
-        tooltip=tooltip,
-        map_style="light"
-    )
-    st.pydeck_chart(deck, height=580)
-
-
-# --- 4. 화면 UI 렌더링 시작 ---
 st.title("🇰🇷 대한민국 여행 센터 (Home)")
 st.link_button("🌐 대한민국 구석구석 (한국관광공사 공식)", "https://korean.visitkorea.or.kr")
 st.write("")
 
-# 날씨 위젯
+# 1. 상단 날씨 섹션
 st.markdown("#### 🌤️ 국내 주요 거점 실시간 날씨")
 w1, w2, w3 = st.columns(3)
 
@@ -115,8 +38,8 @@ display_weather_metric(w3, "제주 (Jeju)", get_weather("Jeju"))
 
 st.divider()
 
-# 탐색 및 지도 섹션
-st.markdown("#### 🗺️ 대한민국 스마트 맵 & 장소 탐색")
+# 2. 카카오 지도 및 장소 탐색
+st.markdown("#### 🗺️ 카카오 지도 & 스마트 장소 탐색")
 
 preset_spots = {
     "경복궁": {"lat": 37.5796, "lng": 126.9770, "address": "서울 종로구 사직로 161", "url": "https://place.map.kakao.com/8129210"},
@@ -184,14 +107,20 @@ with col_left:
                         st.link_button("카카오맵 열기", p["url"])
 
 with col_right:
-    st.subheader("🗺️ 실시간 지도 뷰")
-    st.caption("🔴 중심 장소 | 🔵 주변 시설 (마우스 호버 시 상세 정보 표시)")
+    st.subheader("🗺️ 카카오 지도 실시간 뷰")
     
-    render_kakao_map(
-        lat=target_lat,
-        lng=target_lng,
-        name=target_name,
-        addr=target_addr,
-        places=nearby_list,
-        is_interactive=True
-    )
+    # 카카오 JavaScript 키 조회
+    kakao_js_key = os.getenv("MAP_API_KEY", "")
+    
+    if kakao_js_key:
+        render_kakao_map(
+            js_key=kakao_js_key,
+            lat=target_lat,
+            lng=target_lng,
+            name=target_name,
+            addr=target_addr,
+            places=nearby_list,
+            is_interactive=True
+        )
+    else:
+        st.error("카카오 지도 JavaScript 키(MAP_API_KEY)가 설정되지 않았습니다.")
