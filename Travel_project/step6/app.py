@@ -36,7 +36,7 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------------
-# 2. 로컬 폰트(에이투지체) Base64 로드 & 라벤더 버블 CSS
+# 2. 로컬 폰트(에이투지체) Base64 로드 & 콤팩트 라벤더 CSS
 # -------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -74,105 +74,115 @@ custom_theme_css = f"""
 <style>
 {font_face_css}
 
-/* 전역 폰트 및 라벤더 물빛 배경 */
 html, body, [class*="css"], .stApp {{
     font-family: 'A2Z-Regular', -apple-system, sans-serif !important;
     background: linear-gradient(135deg, #f8f5ff 0%, #f1e9ff 50%, #e9ddfc 100%) !important;
     color: #2b1f3d !important;
 }}
 
-/* 제목류 세미볼드 적용 */
 h1, h2, h3, h4, h5, .stHeading, .spot-title, .weather-temp {{
     font-family: 'A2Z-SemiBold', sans-serif !important;
     color: #3b2359 !important;
 }}
 
-/* 사이드바 */
+/* 사이드바 스타일 */
 section[data-testid="stSidebar"] {{
-    background-color: rgba(248, 244, 255, 0.82) !important;
+    background-color: rgba(248, 244, 255, 0.85) !important;
     backdrop-filter: blur(14px);
     border-right: 1.5px solid rgba(215, 196, 245, 0.5);
 }}
 
-/* 버튼 내부 흰색 박스 버그 박멸 및 맑은 라벤더 캡슐 버튼 */
+/* 사이드바 메뉴 버튼: 텍스트에 맞춰 콤팩트하고 슬림하게 조정 */
 section[data-testid="stSidebar"] div.stButton {{
-    margin-bottom: 6px !important;
+    margin-bottom: 3px !important;
 }}
-.stButton > button {{
+section[data-testid="stSidebar"] .stButton > button {{
     font-family: 'A2Z-SemiBold', sans-serif !important;
+    font-size: 13px !important;
     background: rgba(255, 255, 255, 0.72) !important;
     color: #4a2c7a !important;
-    border: 1.5px solid #dcd0f7 !important;
-    border-radius: 18px !important;
-    padding: 9px 16px !important;
-    box-shadow: 0 4px 12px rgba(181, 155, 230, 0.15) !important;
+    border: 1px solid #dcd0f7 !important;
+    border-radius: 12px !important;
+    padding: 6px 12px !important;
+    min-height: 36px !important;
+    box-shadow: 0 2px 6px rgba(181, 155, 230, 0.12) !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     width: 100% !important;
 }}
-.stButton > button * {{
+section[data-testid="stSidebar"] .stButton > button * {{
     background: transparent !important;
     background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
 }}
-.stButton > button:hover {{
+section[data-testid="stSidebar"] .stButton > button:hover {{
     background: rgba(238, 226, 255, 0.95) !important;
     border-color: #bfa5f5 !important;
     color: #29124d !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(162, 127, 237, 0.25) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(162, 127, 237, 0.2) !important;
 }}
 
-/* 입력창 & 셀렉트박스 */
-div[data-baseweb="input"], div[data-baseweb="select"] {{
+/* 일반 버튼 */
+.stButton > button {{
+    font-family: 'A2Z-SemiBold', sans-serif !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+    color: #4a2c7a !important;
+    border: 1.5px solid #dcd0f7 !important;
     border-radius: 14px !important;
+    padding: 8px 16px !important;
+    box-shadow: 0 3px 8px rgba(181, 155, 230, 0.15) !important;
+}}
+
+/* 인풋 & 셀렉트 */
+div[data-baseweb="input"], div[data-baseweb="select"] {{
+    border-radius: 12px !important;
     background-color: rgba(255, 255, 255, 0.85) !important;
     border: 1.5px solid #d4c2f7 !important;
 }}
 
-/* 날씨 카드 */
+/* 카드 컴포넌트 */
 .weather-card {{
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
     border: 1.5px solid #dcd0f7;
-    border-radius: 18px;
-    padding: 16px 20px;
-    box-shadow: 0 8px 20px rgba(181, 155, 230, 0.18);
-    margin-bottom: 12px;
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: 0 6px 16px rgba(181, 155, 230, 0.15);
+    margin-bottom: 10px;
 }}
 .weather-city {{
     font-family: 'A2Z-SemiBold', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     color: #6c46a8;
 }}
 .weather-temp {{
-    font-size: 30px;
+    font-size: 28px;
     color: #241438;
     margin: 2px 0;
 }}
 .weather-desc-badge {{
-    font-size: 12px;
+    font-size: 11px;
     color: #583391;
     background: #eedfff;
     display: inline-block;
-    padding: 2px 10px;
-    border-radius: 10px;
+    padding: 2px 8px;
+    border-radius: 8px;
     font-weight: bold;
 }}
 .weather-details {{
-    font-size: 12px;
+    font-size: 11px;
     color: #554469;
-    margin-top: 6px;
+    margin-top: 4px;
 }}
 
-/* 스팟 및 맛집 카드 */
 .spot-card {{
     background: rgba(255, 255, 255, 0.88);
     border: 1.5px solid #ded3f7;
     border-radius: 16px;
     padding: 14px 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 14px rgba(193, 172, 235, 0.15);
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(193, 172, 235, 0.12);
 }}
 .spot-tag {{
     display: inline-block;
@@ -189,7 +199,7 @@ div[data-baseweb="input"], div[data-baseweb="select"] {{
 st.markdown(custom_theme_css, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# 3. 플래너 로컬 JSON 영구 보관 (백엔드 불필요)
+# 3. 플래너 로컬 JSON 보관 (백엔드 불필요)
 # -------------------------------------------------------------
 PLAN_FILE = BASE_DIR / "travel_plans.json"
 
@@ -221,15 +231,14 @@ def render_tts_button(text: str, lang_code: str, label: str = "🔊 발음 듣�
         background: #eedfff;
         color: #583391;
         border: 1px solid #d4c2f7;
-        border-radius: 12px;
-        padding: 5px 12px;
-        font-size: 12px;
+        border-radius: 10px;
+        padding: 4px 10px;
+        font-size: 11px;
         font-weight: bold;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        transition: all 0.2s;
     ">
         {label}
     </button>
@@ -241,13 +250,11 @@ def render_tts_button(text: str, lang_code: str, label: str = "🔊 발음 듣�
             utterance.lang = "{lang_code}";
             utterance.rate = 0.9;
             window.speechSynthesis.speak(utterance);
-        }} else {{
-            alert('이 브라우저는 음성 재생을 지원하지 않습니다.');
         }}
     }}
     </script>
     """
-    components.html(html_code, height=36)
+    components.html(html_code, height=34)
 
 # -------------------------------------------------------------
 # 5. API 통신 함수들
@@ -313,7 +320,7 @@ def render_weather_card(title: str, weather_data: dict):
         st.markdown(f"""
         <div class="weather-card">
             <div class="weather-city">✈️ {title}</div>
-            <div class="weather-details">날씨 정보 로딩 대기 중...</div>
+            <div class="weather-details">날씨 로딩 중...</div>
         </div>
         """, unsafe_allow_html=True)
         return
@@ -334,10 +341,10 @@ def render_weather_card(title: str, weather_data: dict):
                 <div class="weather-temp">{temp}°C</div>
                 <div class="weather-desc-badge">{desc}</div>
             </div>
-            <img src="{icon_url}" width="65">
+            <img src="{icon_url}" width="60">
         </div>
         <div class="weather-details">
-            체감 {feels}°C · 습도 {humidity}% · 풍속 {wind}m/s
+            체감 {feels}°C · 습도 {humidity}% · 바람 {wind}m/s
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -353,7 +360,7 @@ def render_kakao_map(lat: float, lon: float, place_name: str = "", nearby_places
     nearby_json = json.dumps(nearby_places or [], ensure_ascii=False)
 
     html_code = f"""
-    <div id="map" style="width:100%;height:520px;border-radius:18px;background:#f8f5ff;
+    <div id="map" style="width:100%;height:520px;border-radius:16px;background:#f8f5ff;
          display:flex;align-items:center;justify-content:center;color:#6b528e;font-size:13px;border:2px solid #ded2f7;">
          지도를 불러오는 중입니다... ✈️
     </div>
@@ -426,7 +433,7 @@ def render_kakao_map(lat: float, lon: float, place_name: str = "", nearby_places
     components.html(html_code, height=540)
 
 # -------------------------------------------------------------
-# 7. 세션 기본값 및 사이드바 (깔끔한 라벤더 메뉴 & CSV 다운로드)
+# 7. 세션 기본값 및 사이드바 (콤팩트 메뉴)
 # -------------------------------------------------------------
 if "current_page" not in st.session_state:
     st.session_state.current_page = "🍲 한국"
@@ -441,8 +448,8 @@ if "selected_place" not in st.session_state:
     st.session_state.selected_place = preset_defaults["경복궁"]
 
 with st.sidebar:
-    st.markdown("<h2 style='color:#3b2359; margin-bottom: 2px;'>✈️ Travel App</h2>", unsafe_allow_html=True)
-    st.caption("스마트 여행 플래너 & 국가별 가이드")
+    st.markdown("<h3 style='color:#3b2359; margin-bottom: 2px;'>✈️ Travel App</h3>", unsafe_allow_html=True)
+    st.caption("스마트 여행 & 미식 플래너")
     st.write("")
 
     nav_pages = [
@@ -456,18 +463,17 @@ with st.sidebar:
 
     for p_id in nav_pages:
         is_active = (st.session_state.current_page == p_id)
-        btn_txt = f"✈️  {p_id}" if is_active else f"     {p_id}"
+        btn_txt = f"✈️  {p_id}" if is_active else f"{p_id}"
         if st.button(btn_txt, key=f"btn_{p_id}"):
             st.session_state.current_page = p_id
             st.rerun()
 
     st.divider()
 
-    # 영구 보관 플래너 보관함 + CSV 다운로드
-    st.markdown("##### 📋 내 여행 플래너 보관함")
+    st.markdown("##### 📋 내 플래너 보관함")
     if st.session_state.my_plan:
         for idx, item in enumerate(st.session_state.my_plan, 1):
-            st.markdown(f"<div style='font-size:12px; color:#402d57; margin-bottom:3px;'><b>{idx}.</b> {item}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:11px; color:#402d57; margin-bottom:3px;'><b>{idx}.</b> {item}</div>", unsafe_allow_html=True)
         
         df_plan = pd.DataFrame({
             "순번": range(1, len(st.session_state.my_plan) + 1),
@@ -476,30 +482,31 @@ with st.sidebar:
         csv_data = df_plan.to_csv(index=False).encode('utf-8-sig')
 
         st.download_button(
-            label="📥 플래너 CSV 다운로드",
+            label="📥 CSV 다운로드",
             data=csv_data,
             file_name="my_travel_plan.csv",
             mime="text/csv"
         )
 
-        if st.button("🗑️ 전체 보관함 비우기"):
+        if st.button("🗑️ 보관함 비우기"):
             st.session_state.my_plan = []
             save_plans([])
             st.rerun()
     else:
-        st.caption("보관된 여행지가 없습니다. 추천 스팟을 플래너에 담아보세요.")
+        st.caption("보관된 여행지가 없습니다.")
 
 # -------------------------------------------------------------
 # 8. 메인 화면 로직
 # -------------------------------------------------------------
 curr_page = st.session_state.current_page
 
-# [PAGE 1] 한국: 미식 기행 컨셉
+# [PAGE 1] 한국: 장소 검색 + 주변 탐색 + 테마 미식 기행 코스 + 돌림판
 if curr_page == "🍲 한국":
-    st.markdown("<h2 style='color:#3b2359;'>🍲 대한민국 미식 기행 센터</h2>", unsafe_allow_html=True)
-    st.caption("지역 고유의 맛과 골목의 숨은 노포를 찾아 떠나는 테마 미식 여행 🥢")
+    st.markdown("<h2 style='color:#3b2359;'>🍲 대한민국 여행 & 미식 센터</h2>", unsafe_allow_html=True)
+    st.caption("원하는 장소를 자유롭게 검색하고, 하단의 지역별 테마 미식 기행 코스도 확인해보세요 ✨")
     st.write("")
 
+    # 1. 날씨 위젯
     w1, w2, w3 = st.columns(3)
     with w1: render_weather_card("서울 (Seoul)", get_weather_by_city("Seoul"))
     with w2: render_weather_card("부산 (Busan)", get_weather_by_city("Busan"))
@@ -507,177 +514,153 @@ if curr_page == "🍲 한국":
 
     st.divider()
 
-    # 미식 기행 데이터베이스
-    gourmet_db = {
-        "서울 익선동 & 종로 노포 기행": {
-            "region": "서울",
-            "lat": 37.5743, "lon": 126.9897,
-            "theme_food": "종로 바싹불고기 & 익선동 한옥 양식",
-            "course": "종로 3가 노포 골목 ➡️ 익선동 한옥 디저트 ➡️ 인사동 전통 다실",
+    # 2. 상단: 원래의 실시간 장소 검색 + 주변 탐색 + 카카오 지도
+    col_search, col_map = st.columns([5, 7], gap="large")
+
+    with col_search:
+        st.markdown("#### 🔍 장소 검색 및 탐색")
+        user_query = st.text_input("가고 싶은 곳 검색", placeholder="예: 성수동 카페, 해운대 맛집, 경복궁")
+        preset_choice = st.selectbox("추천 명소 빠른 선택", list(preset_defaults.keys()))
+
+        if st.button("추천 명소로 이동"):
+            st.session_state.selected_place = preset_defaults[preset_choice]
+
+        if user_query.strip():
+            places, _ = kakao_search_place(user_query.strip())
+            if places:
+                opts = [f"{p['place_name']} ({p.get('road_address_name') or p.get('address_name')})" for p in places]
+                p_idx = st.selectbox("🎯 검색 결과 목록", range(len(opts)), format_func=lambda i: opts[i])
+                st.session_state.selected_place = places[p_idx]
+
+        place = st.session_state.selected_place
+        lat, lon = float(place["y"]), float(place["x"])
+        name = place["place_name"]
+        address = place.get("road_address_name") or place.get("address_name") or "-"
+
+        st.markdown(f"""
+        <div class="spot-card">
+            <span class="spot-tag">현재 중심 장소</span>
+            <div class="spot-title" style="font-size:16px; margin-top:4px;">📍 {name}</div>
+            <div style="font-size:12px; color:#5c4973; margin-top:3px;">{address}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("➕ 플래너에 담기"):
+                item_str = f"[한국] {name}"
+                if item_str not in st.session_state.my_plan:
+                    st.session_state.my_plan.append(item_str)
+                    save_plans(st.session_state.my_plan)
+                    st.success("플래너에 저장되었습니다.")
+        with c2:
+            if place.get("place_url"):
+                st.link_button("카카오맵 상세 ↗", place["place_url"])
+
+        # 주변 편의시설 필터
+        cat_picked = st.radio("주변 탐색", ["선택 안 함", "🍴 맛집", "🧋 디저트/카페", "🏪 편의점"], horizontal=True)
+        cat_map = {"🍴 맛집": "FD6", "🧋 디저트/카페": "CE7", "🏪 편의점": "CS2"}
+        nearby = []
+        if cat_picked in cat_map:
+            nearby = kakao_search_category(cat_map[cat_picked], lat, lon)
+
+        if nearby:
+            st.markdown(f"**주변 탐색 결과 ({len(nearby)}곳)**")
+            with st.container(height=180):
+                for i, p in enumerate(nearby, 1):
+                    with st.expander(f"{i}. {p['place_name']}"):
+                        st.caption(p.get("road_address_name") or p.get("address_name"))
+                        if p.get("place_url"):
+                            st.link_button("카카오맵 열기", p["place_url"])
+
+    with col_map:
+        st.markdown("#### 🗺️ 카카오 지도 뷰")
+        render_kakao_map(lat, lon, place_name=name, nearby_places=nearby)
+
+    st.divider()
+
+    # 3. 하단: 다양화된 테마별 미식 기행 코스 (누르면 지도로 연결)
+    st.markdown("### 🥢 에디터 선정 전국 테마 미식 기행 코스")
+    st.caption("각 지역의 대표 미식 코스를 둘러보고, '지도에서 이 코스 보기'를 누르면 상단 지도에 즉시 표시됩니다.")
+
+    gourmet_courses = {
+        "서울 익선동 한옥 & 종로 노포": {
+            "region": "서울", "lat": 37.5743, "lon": 126.9897,
+            "theme": "바싹불고기 & 익선동 브런치",
+            "course": "종로 3가 노포 골목 ➡️ 익선동 한옥 거리 ➡️ 인사동 전통 다실",
             "spots": [
-                {
-                    "name": "익선잡방 (Ikseon Jabbang)",
-                    "category": "양식 / 브런치",
-                    "rating": 4.8, "reviews": 1240,
-                    "price": "18,000원 ~ 28,000원",
-                    "menu": "이베리코 프렌치랙 스테이크, 명란 크림 파스타",
-                    "comment": "신라호텔 출신 셰프가 선보이는 한옥 감성 프렌치 다이닝의 정수!",
-                    "img": "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=60",
-                    "address": "서울 종로구 수표로28길 17-21"
-                },
-                {
-                    "name": "찬양집 (해물칼국수)",
-                    "category": "한식 / 노포",
-                    "rating": 4.6, "reviews": 3120,
-                    "price": "9,000원",
-                    "menu": "진한 바지락·홍합 해물칼국수, 손만두",
-                    "comment": "1965년부터 이어온 미쉐린 빕 구르망 선정 시원하고 깊은 해물 육수.",
-                    "img": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600&auto=format&fit=crop&q=60",
-                    "address": "서울 종로구 돈화문로11다길 5"
-                }
+                {"name": "익선잡방", "menu": "명란 크림 파스타", "price": "19,000원", "rating": "⭐ 4.8", "img": "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60"},
+                {"name": "찬양집", "menu": "해물칼국수, 손만두", "price": "9,000원", "rating": "⭐ 4.6", "img": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&auto=format&fit=crop&q=60"}
             ]
         },
-        "부산 바다 내음 해산물 & 돼지국밥 기행": {
-            "region": "부산",
-            "lat": 35.1587, "lon": 129.1604,
-            "theme_food": "부산 원조 돼지국밥 & 광안리 활어회",
-            "course": "자갈치 시장 건어물 탐방 ➡️ 영도 흰여울 해녀촌 ➡️ 해운대 포장마차촌",
+        "부산 광안리 오션뷰 & 해운대 미식": {
+            "region": "부산", "lat": 35.1587, "lon": 129.1604,
+            "theme": "수변 돼지국밥 & 달맞이 대구탕",
+            "course": "광안리 민락수변공원 ➡️ 해운대 달맞이길 ➡️ 해운대 포차거리",
             "spots": [
-                {
-                    "name": "수변최고명품돼지국밥",
-                    "category": "한식 / 국밥",
-                    "rating": 4.9, "reviews": 4890,
-                    "price": "10,000원 ~ 13,000원",
-                    "menu": "항정국밥, 고기순대국밥",
-                    "comment": "잡내 없이 극도로 뽀얗고 진한 국물과 야들야들한 항정살의 완벽한 조화!",
-                    "img": "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=600&auto=format&fit=crop&q=60",
-                    "address": "부산 수영구 광안해변로370번길 9-32"
-                },
-                {
-                    "name": "해운대 기와집 대구탕",
-                    "category": "해물 / 탕",
-                    "rating": 4.7, "reviews": 2180,
-                    "price": "14,000원",
-                    "menu": "원조 대구탕 단일 메뉴",
-                    "comment": "달맞이길 언덕에서 바다를 내려다보며 즐기는 칼칼하고 맑은 해장 1티어.",
-                    "img": "https://images.unsplash.com/photo-1555126634-323283e090fa?w=600&auto=format&fit=crop&q=60",
-                    "address": "부산 해운대구 달맞이길104번길 46"
-                }
+                {"name": "수변최고명품돼지국밥", "menu": "항정국밥, 모듬순대", "price": "10,000원", "rating": "⭐ 4.9", "img": "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=500&auto=format&fit=crop&q=60"},
+                {"name": "해운대 기와집 대구탕", "menu": "원조 대구탕", "price": "14,000원", "rating": "⭐ 4.7", "img": "https://images.unsplash.com/photo-1555126634-323283e090fa?w=500&auto=format&fit=crop&q=60"}
             ]
         },
-        "제주 흑돼지 & 감성 오션뷰 미식": {
-            "region": "제주",
-            "lat": 33.4585, "lon": 126.9427,
-            "theme_food": "제주 흑돼지 근고기 & 갈치조림",
-            "course": "애월 한담 해변 카페거리 ➡️ 중문 흑돼지 숯불구이 ➡️ 서귀포 올레야시장",
+        "제주 애월 오션로드 & 중문 흑돼지": {
+            "region": "제주", "lat": 33.4585, "lon": 126.9427,
+            "theme": "숙성 흑돼지 & 갈치조림",
+            "course": "애월 한담해변 ➡️ 중문 흑돼지 구이 ➡️ 성산포 해산물 거리",
             "spots": [
-                {
-                    "name": "숙성도 (중문본점)",
-                    "category": "구이 / 흑돼지",
-                    "rating": 4.9, "reviews": 5600,
-                    "price": "22,000원 ~ 38,000원",
-                    "menu": "720 숙성 흑삼겹, 교차숙성 흑돼지 꽃등심",
-                    "comment": "육즙이 팡 터지는 에이징 삼겹살과 멜젓의 감칠맛은 필수 코스!",
-                    "img": "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=60",
-                    "address": "제주 서귀포시 일주서로 966"
-                },
-                {
-                    "name": "맛나식당 (성산)",
-                    "category": "한식 / 조림",
-                    "rating": 4.8, "reviews": 2900,
-                    "price": "13,000원 ~ 14,000원",
-                    "menu": "갈치조림, 고등어조림 믹스",
-                    "comment": "오전 번호표 마감 필수, 달짝지근하고 푹 익은 무와 신선한 갈치의 전설적 맛.",
-                    "img": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600&auto=format&fit=crop&q=60",
-                    "address": "제주 서귀포시 성산읍 동류암로 41"
-                }
+                {"name": "숙성도 중문본점", "menu": "720 숙성 흑삼겹", "price": "22,000원", "rating": "⭐ 4.9", "img": "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60"},
+                {"name": "맛나식당 성산", "menu": "갈치·고등어조림", "price": "13,000원", "rating": "⭐ 4.8", "img": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&auto=format&fit=crop&q=60"}
+            ]
+        },
+        "강릉 초당 순두부 & 안목 카페거리": {
+            "region": "강릉", "lat": 37.7915, "lon": 128.9175,
+            "theme": "짬뽕순두부 & 커피콩빵",
+            "course": "초당 순두부 마을 ➡️ 안목해변 커피거리 ➡️ 강릉 중앙시장 야시장",
+            "spots": [
+                {"name": "동화가든", "menu": "원조 짬순 (짬뽕순두부)", "price": "13,000원", "rating": "⭐ 4.7", "img": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&auto=format&fit=crop&q=60"},
+                {"name": "테라로사 커피공장", "menu": "핸드드립 스페셜티", "price": "6,500원", "rating": "⭐ 4.8", "img": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=500&auto=format&fit=crop&q=60"}
             ]
         }
     }
 
-    theme_choice = st.selectbox("🗺️ 탐방할 지역 미식 테마 코스를 선택하세요", list(gourmet_db.keys()))
-    current_theme = gourmet_db[theme_choice]
-
-    st.markdown(f"""
-    <div class="spot-card" style="border-left: 5px solid #8e62d9; padding: 18px 22px;">
-        <span class="spot-tag" style="font-size:12px;">{current_theme['region']} 대표 미식</span>
-        <h3 style="margin: 6px 0; color:#3b2359;">🥢 {current_theme['theme_food']}</h3>
-        <p style="font-size:13px; color:#5c4873; margin-bottom: 0;"><b>🚶 추천 기행 동선:</b> {current_theme['course']}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.write("")
-
-    col_map, col_spots = st.columns([6, 6], gap="large")
-
-    with col_map:
-        st.markdown("#### 📍 미식 기행 지도")
-        theme_places_for_map = [{
-            "place_name": s["name"],
-            "road_address_name": s["address"],
-            "phone": "",
-            "x": current_theme["lon"] + (0.003 * i),
-            "y": current_theme["lat"] + (0.003 * i),
-            "place_url": f"https://map.kakao.com/link/search/{s['name']}"
-        } for i, s in enumerate(current_theme["spots"])]
-
-        render_kakao_map(
-            lat=current_theme["lat"],
-            lon=current_theme["lon"],
-            place_name=current_theme["spots"][0]["name"],
-            nearby_places=theme_places_for_map
-        )
-        st.caption("💡 지도 위의 마커를 누르면 상세 위치 정보를 확인할 수 있습니다.")
-
-    with col_spots:
-        st.markdown("#### 🍽️ 기행 대표 맛집 상세 명단")
-        for idx, spot in enumerate(current_theme["spots"]):
+    c_cols = st.columns(len(gourmet_courses))
+    for idx, (c_name, c_info) in enumerate(gourmet_courses.items()):
+        with c_cols[idx]:
             st.markdown(f"""
-            <div class="spot-card" style="margin-bottom: 16px;">
-                <div style="display: flex; gap: 14px;">
-                    <img src="{spot['img']}" style="width: 120px; height: 120px; border-radius: 14px; object-fit: cover; border: 1px solid #d4c2f7;">
-                    <div style="flex: 1;">
-                        <span class="spot-tag">{spot['category']}</span>
-                        <span style="font-size:12px; color:#e08438; font-weight:bold;">⭐ {spot['rating']} <span style="color:#888; font-weight:normal;">({spot['reviews']:,}개 리뷰)</span></span>
-                        <div class="spot-title" style="font-size:17px; margin-top: 3px;">{spot['name']}</div>
-                        <div style="font-size:12px; color:#5c4973; margin-top:2px;">📍 {spot['address']}</div>
-                        <div style="font-size:12px; color:#4a2c7a; margin-top:4px;"><b>대표메뉴:</b> {spot['menu']}</div>
-                        <div style="font-size:12px; color:#6b46a8;"><b>가격대:</b> {spot['price']}</div>
-                    </div>
-                </div>
-                <div style="background: rgba(238, 223, 255, 0.4); border-radius: 10px; padding: 8px 12px; margin-top: 10px; font-size: 12px; color: #432863;">
-                    💬 <b>한줄평:</b> "{spot['comment']}"
-                </div>
+            <div class="spot-card" style="min-height: 250px;">
+                <span class="spot-tag">{c_info['region']}</span>
+                <div class="spot-title" style="font-size:15px; margin-top:4px;">{c_name}</div>
+                <div style="font-size:12px; color:#e06d88; font-weight:bold; margin-top:4px;">🥢 {c_info['theme']}</div>
+                <div style="font-size:11px; color:#666; margin-top:6px; line-height:1.4;">{c_info['course']}</div>
             </div>
             """, unsafe_allow_html=True)
             
-            b_col1, b_col2 = st.columns([1, 1])
-            with b_col1:
-                if st.button(f"➕ 플래너에 담기", key=f"plan_add_{theme_choice}_{idx}"):
-                    item_str = f"[{current_theme['region']}] {spot['name']} ({spot['menu']})"
-                    if item_str not in st.session_state.my_plan:
-                        st.session_state.my_plan.append(item_str)
-                        save_plans(st.session_state.my_plan)
-                        st.success(f"'{spot['name']}' 저장 완료!")
-            with b_col2:
-                st.link_button("카카오맵 리뷰 더보기 ↗", f"https://map.kakao.com/link/search/{spot['name']}")
+            if st.button(f"📍 지도에서 보기", key=f"btn_course_{idx}"):
+                st.session_state.selected_place = {
+                    "x": str(c_info["lon"]),
+                    "y": str(c_info["lat"]),
+                    "place_name": c_name,
+                    "road_address_name": c_info["course"]
+                }
+                st.rerun()
 
     st.divider()
 
-    # 오늘 뭐 먹지? 돌려돌려 돌림판
+    # 4. 맨 아래: 잘림 없는 돌려돌려 메뉴 돌림판
     st.markdown("### 🎡 오늘 뭐 먹지? 돌려돌려 메뉴 돌림판!")
-    st.caption("무엇을 먹을지 고민될 때 돌림판을 돌려 오늘의 미식 메뉴를 정해보세요 ✨")
+    st.caption("결정하기 힘들 때 시원하게 돌려 오늘의 식사 메뉴를 정해보세요 🎯")
 
     roulette_html = """
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: rgba(255,255,255,0.7); border-radius: 20px; border: 1.5px solid #ded2f7; box-shadow: 0 6px 18px rgba(181, 155, 230, 0.15);">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 20px 30px 20px; background: rgba(255,255,255,0.75); border-radius: 20px; border: 1.5px solid #ded2f7; box-shadow: 0 6px 18px rgba(181, 155, 230, 0.15); margin-bottom: 20px;">
         <div style="position: relative; width: 320px; height: 320px;">
             <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 24px solid #7c4fd6; z-index: 10;"></div>
             <canvas id="wheelCanvas" width="320" height="320" style="border-radius: 50%; box-shadow: 0 4px 15px rgba(138, 92, 230, 0.25);"></canvas>
         </div>
+        
         <button id="spinBtn" onclick="spinWheel()" style="
-            margin-top: 22px;
+            margin-top: 24px;
             background: linear-gradient(135deg, #a780f2 0%, #8555e3 100%);
             color: white;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             border: none;
             border-radius: 20px;
@@ -688,7 +671,8 @@ if curr_page == "🍲 한국":
         ">
             🎯 돌려돌려 돌림판 START!
         </button>
-        <div id="resultBox" style="margin-top: 15px; font-size: 17px; font-weight: bold; color: #4a287a; min-height: 24px;"></div>
+
+        <div id="resultBox" style="margin-top: 18px; font-size: 16px; font-weight: bold; color: #4a287a; min-height: 28px; text-align: center;"></div>
     </div>
 
     <script>
@@ -743,7 +727,7 @@ if curr_page == "🍲 한국":
         if (isSpinning) return;
         isSpinning = true;
         spinBtn.disabled = true;
-        resultBox.innerText = "두구두구... 과연 오늘의 메뉴는? 🥢";
+        resultBox.innerText = "두구두구... 오늘의 추천 메뉴는? 🥢";
 
         const spinDuration = 3500;
         const totalRotations = (5 + Math.random() * 5) * 2 * Math.PI;
@@ -765,14 +749,14 @@ if curr_page == "🍲 한국":
                 const normalizedAngle = (1.5 * Math.PI - (currentAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
                 const winningIndex = Math.floor(normalizedAngle / arcSize);
                 const winner = foods[winningIndex];
-                resultBox.innerHTML = `🎉 당첨! 오늘의 추천 메뉴는 <span style="color:#8555e3; font-size:19px;">[${winner}]</span> 입니다!`;
+                resultBox.innerHTML = `🎉 당첨! 오늘의 추천 메뉴는 <span style="color:#8555e3; font-size:18px;">[${winner}]</span> 입니다!`;
             }
         }
         requestAnimationFrame(animate);
     }
     </script>
     """
-    components.html(roulette_html, height=440)
+    components.html(roulette_html, height=560)
 
 # [PAGE 2, 3, 4] 일본, 중국, 미국
 elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
@@ -855,7 +839,7 @@ elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
             <div class="spot-card">
                 <span class="spot-tag">{s['tag']}</span>
                 <span class="spot-tag" style="background:#e4d6fc; color:#4a2382;">{s['city']}</span>
-                <div class="spot-title" style="margin-top:6px; font-size:16px;">{s['name']}</div>
+                <div class="spot-title" style="margin-top:6px; font-size:15px;">{s['name']}</div>
                 <div style="font-size:12px; color:#5c4973; margin-top:4px;">{s['desc']}</div>
             </div>
             """, unsafe_allow_html=True)
@@ -868,20 +852,18 @@ elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
 
     st.divider()
 
-    st.markdown("### 🗣️ 여행지 필수 생존 회화 (현지어 오디오 발음)")
-    st.caption("버튼을 누르면 실제 현지어 음성(TTS)으로 자연스럽게 들려줍니다.")
-    
+    st.markdown("### 🗣️ 필수 생존 회화 (현지어 오디오 발음)")
     ph_cols = st.columns(len(info["phrases"]))
     for idx, ph in enumerate(info["phrases"]):
         with ph_cols[idx]:
             st.markdown(f"""
-            <div class="spot-card" style="min-height: 140px;">
+            <div class="spot-card" style="min-height: 130px;">
                 <div style="font-size:11px; color:#6b46a8; font-weight:bold;">{ph['ko']}</div>
-                <div style="font-size:15px; font-weight:bold; color:#2c1b42; margin: 4px 0;">{ph['native']}</div>
+                <div style="font-size:14px; font-weight:bold; color:#2c1b42; margin: 4px 0;">{ph['native']}</div>
                 <div style="font-size:11px; color:#78668f;">[{ph['pron']}]</div>
             </div>
             """, unsafe_allow_html=True)
-            render_tts_button(ph["native"], info["lang"], label="🔊 발음 듣기")
+            render_tts_button(ph["native"], info["lang"], label="🔊 듣기")
 
 # [PAGE 5] 기타 국가
 elif curr_page == "🥐 기타 국가":
@@ -921,8 +903,8 @@ elif curr_page == "🥐 기타 국가":
     st.markdown(f"""
     <div class="spot-card">
         <span class="spot-tag">핵심 코스</span>
-        <div class="spot-title" style="margin-top:6px; font-size:16px;">📍 {pick} 추천 코스</div>
-        <div style="font-size:13px; color:#5c4973; margin-top:6px;">{t_data['spots']}</div>
+        <div class="spot-title" style="margin-top:6px; font-size:15px;">📍 {pick} 추천 코스</div>
+        <div style="font-size:12px; color:#5c4973; margin-top:6px;">{t_data['spots']}</div>
     </div>
     """, unsafe_allow_html=True)
     if st.button("➕ 이 도시 코스 전체 담기"):
@@ -954,16 +936,14 @@ elif curr_page == "🍧 환율 & 일정 플래너":
             st.markdown(f"""
             <div class="weather-card" style="margin-top:20px; text-align:center;">
                 <div class="weather-city" style="justify-content:center;">✈️ 변환 결과</div>
-                <div class="weather-temp" style="color:#6d3fc2; font-size:38px; margin: 10px 0;">{res:,.2f} {target}</div>
+                <div class="weather-temp" style="color:#6d3fc2; font-size:36px; margin: 10px 0;">{res:,.2f} {target}</div>
                 <div class="weather-desc-badge">{amt:,.0f} {base} · 적용 환율: 1 {base} = {c_rate:.4f} {target}</div>
             </div>
             """, unsafe_allow_html=True)
 
     st.divider()
 
-    # 스마트 일정표 생성기 (동일 국가/도시별 맞춤 일정 빌더)
     st.markdown("### 🗓️ 내 플래너 맞춤형 1Day 코스 자동 빌더")
-    
     if st.session_state.my_plan:
         grouped_plans = {}
         for item in st.session_state.my_plan:
@@ -973,17 +953,14 @@ elif curr_page == "🍧 환율 & 일정 플래너":
             else:
                 region = "기타"
                 spot = item
-            
             grouped_plans.setdefault(region, []).append(spot)
 
         available_regions = list(grouped_plans.keys())
         selected_region = st.selectbox("일정을 생성할 여행지를 선택하세요", available_regions)
-
         region_spots = grouped_plans[selected_region]
 
         if st.button(f"✨ [{selected_region}] 맞춤 당일 동선 짜기"):
             times = ["오전 (10:00)", "점심 & 휴식 (12:30)", "오후 (15:00)", "저녁 & 야경 (18:30)", "나이트 (20:30)"]
-            
             schedule_data = []
             for i, spot in enumerate(region_spots[:5]):
                 schedule_data.append({
@@ -993,7 +970,7 @@ elif curr_page == "🍧 환율 & 일정 플래너":
                 })
 
             if len(region_spots) < 3:
-                st.caption(f"💡 [{selected_region}] 관련 장소가 {len(region_spots)}곳만 담겨 있어 기본 동선으로 배치했습니다. 해당 국가 페이지에서 장소를 더 담아보세요!")
+                st.caption(f"💡 [{selected_region}] 관련 장소가 {len(region_spots)}곳만 담겨 있어 기본 동선으로 배치했습니다.")
 
             st.markdown(f"#### 🎈 [{selected_region}] 하루 추천 코스")
             df_sched = pd.DataFrame(schedule_data)
