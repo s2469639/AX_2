@@ -36,7 +36,7 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------------
-# 2. 로컬 폰트(에이투지체) Base64 로드 & 콤팩트 라벤더 CSS
+# 2. 로컬 폰트(에이투지체) Base64 로드 & 라벤더 버블 CSS
 # -------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -85,26 +85,32 @@ h1, h2, h3, h4, h5, .stHeading, .spot-title, .weather-temp {{
     color: #3b2359 !important;
 }}
 
-/* 사이드바 스타일 */
-section[data-testid="stSidebar"] {{
-    background-color: rgba(248, 244, 255, 0.85) !important;
-    backdrop-filter: blur(14px);
-    border-right: 1.5px solid rgba(215, 196, 245, 0.5);
+/* 라디오 단추 글자 크기 & 여백 대폭 확대 */
+div[data-testid="stRadio"] label {{
+    font-size: 15px !important;
+    font-family: 'A2Z-SemiBold', sans-serif !important;
+    color: #3b2359 !important;
+    padding: 6px 10px !important;
+    cursor: pointer !important;
+}}
+div[data-testid="stRadio"] label p {{
+    font-size: 15px !important;
+    line-height: 1.4 !important;
 }}
 
-/* 사이드바 메뉴 버튼: 텍스트에 맞춰 콤팩트하고 슬림하게 조정 */
+/* 사이드바 메뉴 버튼 */
 section[data-testid="stSidebar"] div.stButton {{
     margin-bottom: 3px !important;
 }}
 section[data-testid="stSidebar"] .stButton > button {{
     font-family: 'A2Z-SemiBold', sans-serif !important;
-    font-size: 13px !important;
+    font-size: 13.5px !important;
     background: rgba(255, 255, 255, 0.72) !important;
     color: #4a2c7a !important;
     border: 1px solid #dcd0f7 !important;
     border-radius: 12px !important;
-    padding: 6px 12px !important;
-    min-height: 36px !important;
+    padding: 7px 12px !important;
+    min-height: 38px !important;
     box-shadow: 0 2px 6px rgba(181, 155, 230, 0.12) !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     width: 100% !important;
@@ -126,7 +132,7 @@ section[data-testid="stSidebar"] .stButton > button:hover {{
 /* 일반 버튼 */
 .stButton > button {{
     font-family: 'A2Z-SemiBold', sans-serif !important;
-    background: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.82) !important;
     color: #4a2c7a !important;
     border: 1.5px solid #dcd0f7 !important;
     border-radius: 14px !important;
@@ -141,7 +147,7 @@ div[data-baseweb="input"], div[data-baseweb="select"] {{
     border: 1.5px solid #d4c2f7 !important;
 }}
 
-/* 카드 컴포넌트 */
+/* 날씨 카드 */
 .weather-card {{
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
@@ -176,12 +182,13 @@ div[data-baseweb="input"], div[data-baseweb="select"] {{
     margin-top: 4px;
 }}
 
+/* 스팟 & 페스티벌 카드 */
 .spot-card {{
     background: rgba(255, 255, 255, 0.88);
     border: 1.5px solid #ded3f7;
     border-radius: 16px;
     padding: 14px 16px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     box-shadow: 0 4px 12px rgba(193, 172, 235, 0.12);
 }}
 .spot-tag {{
@@ -194,12 +201,20 @@ div[data-baseweb="input"], div[data-baseweb="select"] {{
     font-family: 'A2Z-SemiBold', sans-serif;
     margin-right: 4px;
 }}
+.festival-card {{
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(246, 238, 255, 0.9) 100%);
+    border: 1.5px solid #d4c2f7;
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(181, 155, 230, 0.15);
+}}
 </style>
 """
 st.markdown(custom_theme_css, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# 3. 플래너 로컬 JSON 보관 (백엔드 불필요)
+# 3. 플래너 로컬 JSON 영구 보관
 # -------------------------------------------------------------
 PLAN_FILE = BASE_DIR / "travel_plans.json"
 
@@ -223,7 +238,7 @@ if "my_plan" not in st.session_state:
     st.session_state.my_plan = load_saved_plans()
 
 # -------------------------------------------------------------
-# 4. 현지어 발음 TTS 재생 렌더러
+# 4. 현지어 발음 TTS 오디오
 # -------------------------------------------------------------
 def render_tts_button(text: str, lang_code: str, label: str = "🔊 발음 듣기"):
     html_code = f"""
@@ -433,7 +448,7 @@ def render_kakao_map(lat: float, lon: float, place_name: str = "", nearby_places
     components.html(html_code, height=540)
 
 # -------------------------------------------------------------
-# 7. 세션 기본값 및 사이드바 (콤팩트 메뉴)
+# 7. 세션 기본값 및 사이드바
 # -------------------------------------------------------------
 if "current_page" not in st.session_state:
     st.session_state.current_page = "🍲 한국"
@@ -500,13 +515,12 @@ with st.sidebar:
 # -------------------------------------------------------------
 curr_page = st.session_state.current_page
 
-# [PAGE 1] 한국: 장소 검색 + 주변 탐색 + 테마 미식 기행 코스 + 돌림판
+# [PAGE 1] 한국: 실시간 검색 + 주변 탐색 + 추천 시기 & 축제 + 명소 9선 + 테마 코스 + 한식 돌림판
 if curr_page == "🍲 한국":
     st.markdown("<h2 style='color:#3b2359;'>🍲 대한민국 여행 & 미식 센터</h2>", unsafe_allow_html=True)
-    st.caption("원하는 장소를 자유롭게 검색하고, 하단의 지역별 테마 미식 기행 코스도 확인해보세요 ✨")
+    st.caption("자유로운 장소 검색과 사계절 축제, 9대 명소 및 테마 미식 기행 코스를 함께 확인해보세요 ✨")
     st.write("")
 
-    # 1. 날씨 위젯
     w1, w2, w3 = st.columns(3)
     with w1: render_weather_card("서울 (Seoul)", get_weather_by_city("Seoul"))
     with w2: render_weather_card("부산 (Busan)", get_weather_by_city("Busan"))
@@ -514,7 +528,39 @@ if curr_page == "🍲 한국":
 
     st.divider()
 
-    # 2. 상단: 원래의 실시간 장소 검색 + 주변 탐색 + 카카오 지도
+    # 한국 추천 여행 시기 & 사계절 대표 페스티벌
+    st.markdown("### 🌸 대한민국 추천 여행 시기 & 대표 축제")
+    k_col1, k_col2 = st.columns([4, 6], gap="medium")
+    with k_col1:
+        st.markdown("""
+        <div class="festival-card">
+            <span class="spot-tag">Best Season</span>
+            <div style="font-size:16px; font-weight:bold; color:#3b2359; margin-top:4px;">봄(4~5월) & 가을(9~10월)</div>
+            <div style="font-size:12px; color:#5c4873; margin-top:6px; line-height:1.5;">
+                청명한 하늘과 쾌적한 기온으로 고궁 산책과 야외 테라스, 단풍 놀이를 즐기기에 가장 완벽한 계절입니다.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with k_col2:
+        k_festivals = [
+            ("🌸 진해 군항제 벚꽃축제", "3월 말 ~ 4월 초", "창원/진해", "국내 최대 규모의 벚꽃 터널과 여좌천 로망스다리 야경"),
+            ("🎆 부산 불꽃축제", "11월", "부산 광안리", "광안대교를 배경으로 펼쳐지는 초대형 멀티미디어 불꽃쇼"),
+            ("🏮 서울 빛초롱축제", "12월 ~ 1월", "서울 광화문/청계천", "빛 조형물과 한지 등불이 수놓는 겨울 야경 산책")
+        ]
+        f_cols = st.columns(3)
+        for i, (f_name, f_time, f_loc, f_desc) in enumerate(k_festivals):
+            with f_cols[i]:
+                st.markdown(f"""
+                <div class="spot-card" style="min-height:130px; padding:10px 12px;">
+                    <span class="spot-tag" style="font-size:10px;">{f_time}</span>
+                    <div style="font-size:13px; font-weight:bold; color:#3b2359; margin-top:3px;">{f_name}</div>
+                    <div style="font-size:11px; color:#78668f; margin-top:2px;">{f_desc}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+    st.divider()
+
+    # 상단 검색 & 카카오 지도
     col_search, col_map = st.columns([5, 7], gap="large")
 
     with col_search:
@@ -540,8 +586,8 @@ if curr_page == "🍲 한국":
         st.markdown(f"""
         <div class="spot-card">
             <span class="spot-tag">현재 중심 장소</span>
-            <div class="spot-title" style="font-size:16px; margin-top:4px;">📍 {name}</div>
-            <div style="font-size:12px; color:#5c4973; margin-top:3px;">{address}</div>
+            <div class="spot-title" style="font-size:17px; margin-top:4px;">📍 {name}</div>
+            <div style="font-size:13px; color:#5c4973; margin-top:3px;">{address}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -557,21 +603,24 @@ if curr_page == "🍲 한국":
             if place.get("place_url"):
                 st.link_button("카카오맵 상세 ↗", place["place_url"])
 
-        # 주변 편의시설 필터
-        cat_picked = st.radio("주변 탐색", ["선택 안 함", "🍴 맛집", "🧋 디저트/카페", "🏪 편의점"], horizontal=True)
+        st.markdown("<div style='font-size: 16px; font-weight: bold; color: #3b2359; margin-top: 14px;'>🧭 주변 편의시설 필터 (반경 1.5km)</div>", unsafe_allow_html=True)
+        cat_picked = st.radio("", ["선택 안 함", "🍴 맛집", "🧋 디저트/카페", "🏪 편의점"], horizontal=True)
         cat_map = {"🍴 맛집": "FD6", "🧋 디저트/카페": "CE7", "🏪 편의점": "CS2"}
         nearby = []
         if cat_picked in cat_map:
             nearby = kakao_search_category(cat_map[cat_picked], lat, lon)
 
         if nearby:
-            st.markdown(f"**주변 탐색 결과 ({len(nearby)}곳)**")
-            with st.container(height=180):
+            st.markdown(f"<div style='font-size: 16px; font-weight: bold; color: #6a3ab2; margin-top: 12px;'>📍 주변 탐색 결과 ({len(nearby)}곳)</div>", unsafe_allow_html=True)
+            with st.container(height=260):
                 for i, p in enumerate(nearby, 1):
-                    with st.expander(f"{i}. {p['place_name']}"):
-                        st.caption(p.get("road_address_name") or p.get("address_name"))
+                    dist = f"({p['distance']}m)" if p.get("distance") else ""
+                    with st.expander(f"{i}. {p['place_name']} {dist}"):
+                        st.markdown(f"<div style='font-size: 13.5px; color: #333;'><b>주소:</b> {p.get('road_address_name') or p.get('address_name')}</div>", unsafe_allow_html=True)
+                        if p.get("phone"):
+                            st.markdown(f"<div style='font-size: 13px; color: #059669;'>📞 {p['phone']}</div>", unsafe_allow_html=True)
                         if p.get("place_url"):
-                            st.link_button("카카오맵 열기", p["place_url"])
+                            st.link_button("카카오맵 열기 ↗", p["place_url"])
 
     with col_map:
         st.markdown("#### 🗺️ 카카오 지도 뷰")
@@ -579,46 +628,64 @@ if curr_page == "🍲 한국":
 
     st.divider()
 
-    # 3. 하단: 다양화된 테마별 미식 기행 코스 (누르면 지도로 연결)
-    st.markdown("### 🥢 에디터 선정 전국 테마 미식 기행 코스")
-    st.caption("각 지역의 대표 미식 코스를 둘러보고, '지도에서 이 코스 보기'를 누르면 상단 지도에 즉시 표시됩니다.")
+    # 대한민국 대표 필수 명소 9선
+    st.markdown("### 🇰🇷 대한민국 대표 필수 명소 9선")
+    korea_spots_9 = [
+        {"name": "서울 경복궁 & 북촌한옥마을", "city": "서울", "tag": "고궁/역사", "desc": "한복을 입고 거니는 조선 왕조의 법궁과 고즈넉한 전통 한옥 마을"},
+        {"name": "서울 N서울타워 & 남산공원", "city": "서울", "tag": "야경명소", "desc": "케이블카를 타고 올라 서울 시내를 360도 파노라마로 감상하는 랜드마크"},
+        {"name": "서울 성수동 카페거리", "city": "서울", "tag": "핫플레이스", "desc": "붉은 벽돌 창고를 개조한 감성 갤러리와 트렌디한 팝업스토어 성지"},
+        {"name": "부산 해운대 & 블루라인파크", "city": "부산", "tag": "오션뷰", "desc": "해안절경을 따라 달리는 해변열차와 드넓은 백사장의 낭만"},
+        {"name": "부산 광안리 해수욕장", "city": "부산", "tag": "야경/해변", "desc": "광안대교를 수놓는 빛과 드론쇼, 오션뷰 펍이 밀집한 핫스팟"},
+        {"name": "부산 감천문화마을", "city": "부산", "tag": "문화예술", "desc": "계단식 파스텔톤 집들과 골목 벽화, 어린왕자 포토존이 있는 명소"},
+        {"name": "제주 성산일출봉", "city": "제주", "tag": "유네스코자연", "desc": "푸른 바다 위로 솟아오른 거대한 화산 분화구와 웅장한 일출"},
+        {"name": "제주 애월 한담해안산책로", "city": "제주", "tag": "산책/힐링", "desc": "에메랄드빛 바다 바로 옆 기암괴석을 따라 걷는 환상적인 일몰 코스"},
+        {"name": "경주 불국사 & 대릉원", "city": "경주", "tag": "천년역사", "desc": "신라 천년의 숨결이 깃든 고분군과 황리단길의 감성이 어우러진 여행지"}
+    ]
 
+    for row in range(0, 9, 3):
+        k_cols = st.columns(3)
+        for i in range(3):
+            s = korea_spots_9[row + i]
+            with k_cols[i]:
+                st.markdown(f"""
+                <div class="spot-card" style="min-height: 145px;">
+                    <span class="spot-tag">{s['tag']}</span>
+                    <span class="spot-tag" style="background:#e4d6fc; color:#4a2382;">{s['city']}</span>
+                    <div class="spot-title" style="margin-top:6px; font-size:15.5px;">{s['name']}</div>
+                    <div style="font-size:12px; color:#5c4973; margin-top:4px;">{s['desc']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button("➕ 플래너 담기", key=f"kr_spot_{row+i}"):
+                    item_str = f"[{s['city']}] {s['name']}"
+                    if item_str not in st.session_state.my_plan:
+                        st.session_state.my_plan.append(item_str)
+                        save_plans(st.session_state.my_plan)
+                        st.success(f"'{s['name']}' 저장 완료!")
+
+    st.divider()
+
+    # 테마 미식 기행 코스
+    st.markdown("### 🥢 에디터 선정 전국 테마 미식 기행 코스")
     gourmet_courses = {
         "서울 익선동 한옥 & 종로 노포": {
             "region": "서울", "lat": 37.5743, "lon": 126.9897,
             "theme": "바싹불고기 & 익선동 브런치",
-            "course": "종로 3가 노포 골목 ➡️ 익선동 한옥 거리 ➡️ 인사동 전통 다실",
-            "spots": [
-                {"name": "익선잡방", "menu": "명란 크림 파스타", "price": "19,000원", "rating": "⭐ 4.8", "img": "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60"},
-                {"name": "찬양집", "menu": "해물칼국수, 손만두", "price": "9,000원", "rating": "⭐ 4.6", "img": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&auto=format&fit=crop&q=60"}
-            ]
+            "course": "종로 3가 노포 골목 ➡️ 익선동 한옥 거리 ➡️ 인사동 전통 다실"
         },
         "부산 광안리 오션뷰 & 해운대 미식": {
             "region": "부산", "lat": 35.1587, "lon": 129.1604,
             "theme": "수변 돼지국밥 & 달맞이 대구탕",
-            "course": "광안리 민락수변공원 ➡️ 해운대 달맞이길 ➡️ 해운대 포차거리",
-            "spots": [
-                {"name": "수변최고명품돼지국밥", "menu": "항정국밥, 모듬순대", "price": "10,000원", "rating": "⭐ 4.9", "img": "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=500&auto=format&fit=crop&q=60"},
-                {"name": "해운대 기와집 대구탕", "menu": "원조 대구탕", "price": "14,000원", "rating": "⭐ 4.7", "img": "https://images.unsplash.com/photo-1555126634-323283e090fa?w=500&auto=format&fit=crop&q=60"}
-            ]
+            "course": "광안리 민락수변공원 ➡️ 해운대 달맞이길 ➡️ 해운대 포차거리"
         },
         "제주 애월 오션로드 & 중문 흑돼지": {
             "region": "제주", "lat": 33.4585, "lon": 126.9427,
             "theme": "숙성 흑돼지 & 갈치조림",
-            "course": "애월 한담해변 ➡️ 중문 흑돼지 구이 ➡️ 성산포 해산물 거리",
-            "spots": [
-                {"name": "숙성도 중문본점", "menu": "720 숙성 흑삼겹", "price": "22,000원", "rating": "⭐ 4.9", "img": "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60"},
-                {"name": "맛나식당 성산", "menu": "갈치·고등어조림", "price": "13,000원", "rating": "⭐ 4.8", "img": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&auto=format&fit=crop&q=60"}
-            ]
+            "course": "애월 한담해변 ➡️ 중문 흑돼지 구이 ➡️ 성산포 해산물 거리"
         },
         "강릉 초당 순두부 & 안목 카페거리": {
             "region": "강릉", "lat": 37.7915, "lon": 128.9175,
             "theme": "짬뽕순두부 & 커피콩빵",
-            "course": "초당 순두부 마을 ➡️ 안목해변 커피거리 ➡️ 강릉 중앙시장 야시장",
-            "spots": [
-                {"name": "동화가든", "menu": "원조 짬순 (짬뽕순두부)", "price": "13,000원", "rating": "⭐ 4.7", "img": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&auto=format&fit=crop&q=60"},
-                {"name": "테라로사 커피공장", "menu": "핸드드립 스페셜티", "price": "6,500원", "rating": "⭐ 4.8", "img": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=500&auto=format&fit=crop&q=60"}
-            ]
+            "course": "초당 순두부 마을 ➡️ 안목해변 커피거리 ➡️ 강릉 중앙시장 야시장"
         }
     }
 
@@ -626,14 +693,13 @@ if curr_page == "🍲 한국":
     for idx, (c_name, c_info) in enumerate(gourmet_courses.items()):
         with c_cols[idx]:
             st.markdown(f"""
-            <div class="spot-card" style="min-height: 250px;">
+            <div class="spot-card" style="min-height: 180px;">
                 <span class="spot-tag">{c_info['region']}</span>
                 <div class="spot-title" style="font-size:15px; margin-top:4px;">{c_name}</div>
                 <div style="font-size:12px; color:#e06d88; font-weight:bold; margin-top:4px;">🥢 {c_info['theme']}</div>
                 <div style="font-size:11px; color:#666; margin-top:6px; line-height:1.4;">{c_info['course']}</div>
             </div>
             """, unsafe_allow_html=True)
-            
             if st.button(f"📍 지도에서 보기", key=f"btn_course_{idx}"):
                 st.session_state.selected_place = {
                     "x": str(c_info["lon"]),
@@ -645,9 +711,9 @@ if curr_page == "🍲 한국":
 
     st.divider()
 
-    # 4. 맨 아래: 잘림 없는 돌려돌려 메뉴 돌림판
-    st.markdown("### 🎡 오늘 뭐 먹지? 돌려돌려 메뉴 돌림판!")
-    st.caption("결정하기 힘들 때 시원하게 돌려 오늘의 식사 메뉴를 정해보세요 🎯")
+    # 정통 한식 메뉴 돌림판
+    st.markdown("### 🎡 오늘 뭐 먹지? 돌려돌려 한식 메뉴 돌림판!")
+    st.caption("어떤 한식을 먹을지 고민될 때 돌림판을 돌려 오늘의 식사 메뉴를 정해보세요 🥢")
 
     roulette_html = """
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 20px 30px 20px; background: rgba(255,255,255,0.75); border-radius: 20px; border: 1.5px solid #ded2f7; box-shadow: 0 6px 18px rgba(181, 155, 230, 0.15); margin-bottom: 20px;">
@@ -672,7 +738,7 @@ if curr_page == "🍲 한국":
             🎯 돌려돌려 돌림판 START!
         </button>
 
-        <div id="resultBox" style="margin-top: 18px; font-size: 16px; font-weight: bold; color: #4a287a; min-height: 28px; text-align: center;"></div>
+        <div id="resultBox" style="margin-top: 18px; font-size: 17px; font-weight: bold; color: #4a287a; min-height: 28px; text-align: center;"></div>
     </div>
 
     <script>
@@ -681,7 +747,7 @@ if curr_page == "🍲 한국":
     const spinBtn = document.getElementById("spinBtn");
     const resultBox = document.getElementById("resultBox");
 
-    const foods = ["돼지국밥 🍲", "해물칼국수 🍜", "흑돼지구이 🥩", "갈치조림 🐟", "이베리코파스타 🍝", "디저트빙수 🍧", "바싹불고기 🍖", "신선활어회 🍣"];
+    const foods = ["솥뚜껑 삼겹살 🥩", "얼큰 김치찌개 🍲", "한우 육회비빔밥 🍚", "매콤 닭볶음탕 🥘", "보쌈과 막국수 🥬", "궁중 소갈비찜 🍖", "해물파전과 막걸리 🥞", "순두부찌개 🍲"];
     const colors = ["#f2e8ff", "#eedcff", "#e4cbff", "#dabbff", "#cfa9ff", "#eedcff", "#e4cbff", "#f2e8ff"];
     const numSegments = foods.length;
     const arcSize = (2 * Math.PI) / numSegments;
@@ -707,8 +773,8 @@ if curr_page == "🍲 한국":
             ctx.rotate(angle + arcSize / 2);
             ctx.textAlign = "right";
             ctx.fillStyle = "#3d2263";
-            ctx.font = "bold 13px sans-serif";
-            ctx.fillText(foods[i], 135, 5);
+            ctx.font = "bold 12.5px sans-serif";
+            ctx.fillText(foods[i], 140, 5);
             ctx.restore();
         }
 
@@ -727,7 +793,7 @@ if curr_page == "🍲 한국":
         if (isSpinning) return;
         isSpinning = true;
         spinBtn.disabled = true;
-        resultBox.innerText = "두구두구... 오늘의 추천 메뉴는? 🥢";
+        resultBox.innerText = "두구두구... 오늘의 한식 추천 메뉴는? 🥢";
 
         const spinDuration = 3500;
         const totalRotations = (5 + Math.random() * 5) * 2 * Math.PI;
@@ -749,7 +815,7 @@ if curr_page == "🍲 한국":
                 const normalizedAngle = (1.5 * Math.PI - (currentAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
                 const winningIndex = Math.floor(normalizedAngle / arcSize);
                 const winner = foods[winningIndex];
-                resultBox.innerHTML = `🎉 당첨! 오늘의 추천 메뉴는 <span style="color:#8555e3; font-size:18px;">[${winner}]</span> 입니다!`;
+                resultBox.innerHTML = `🎉 당첨! 오늘의 추천 한식은 <span style="color:#8555e3; font-size:19px;">[${winner}]</span> 입니다!`;
             }
         }
         requestAnimationFrame(animate);
@@ -758,15 +824,28 @@ if curr_page == "🍲 한국":
     """
     components.html(roulette_html, height=560)
 
-# [PAGE 2, 3, 4] 일본, 중국, 미국
+# [PAGE 2, 3, 4] 일본, 중국, 미국 (각 국가별 9개 명소 & 추천 시기 & 페스티벌)
 elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
     country_data = {
         "🍣 일본": {
             "title": "일본 여행 플래너 (Japan)", "city": "Tokyo", "curr": "JPY", "lang": "ja-JP",
+            "best_season": "봄(3~5월 벚꽃 시즌) & 가을(10~11월 단풍)",
+            "season_desc": "선선하고 쾌적한 날씨 속에서 만개하는 벚꽃과 고즈넉한 사찰의 붉은 단풍을 만끽하기 가장 좋은 시기입니다.",
+            "festivals": [
+                {"name": "교토 기온 마츠리 🏮", "time": "7월 한 달간", "desc": "1100년 역사를 자랑하는 일본 3대 축제이자 화려한 야마보코 수레 행진"},
+                {"name": "오사카 텐진 마츠리 🎆", "time": "7월 24~25일", "desc": "오카와 강을 메우는 100여 척의 배 행렬과 강변을 수놓는 불꽃놀이"},
+                {"name": "아오모리 네부타 축제 👹", "time": "8월 초", "desc": "거대한 무사 인형 등불 수레와 수천 명의 하네토 댄서들이 펼치는 퍼레이드"}
+            ],
             "spots": [
-                {"name": "도쿄 시부야 스카이", "city": "Tokyo", "tag": "전망대", "desc": "도쿄 시내를 360도로 조망하는 루프탑 전망대"},
-                {"name": "교토 아라시야마 대나무숲", "city": "Kyoto", "tag": "자연", "desc": "신비로운 청량감을 주는 치쿠린 산책로"},
-                {"name": "오사카 도톤보리", "city": "Osaka", "tag": "미식거리", "desc": "화려한 간판과 맛집이 모여있는 중심가"}
+                {"name": "도쿄 시부야 스카이", "city": "도쿄", "tag": "전망대", "desc": "도쿄 시내와 후지산을 360도로 조망하는 최신 루프탑 전망대"},
+                {"name": "도쿄 센소지 & 아사쿠사", "city": "도쿄", "tag": "전통사찰", "desc": "거대한 붉은 제등 카미나리몬과 전통 상점가가 펼쳐진 사찰"},
+                {"name": "도쿄 팀랩 플래닛", "city": "도쿄", "tag": "미디어아트", "desc": "물과 꽃 속에 완전히 몰입하는 세계적인 디지털 아트 뮤지엄"},
+                {"name": "오사카 도톤보리 & 글리코상", "city": "오사카", "tag": "미식거리", "desc": "화려한 네온사인과 타코야키, 쿠시카츠 맛집이 모여있는 심장부"},
+                {"name": "오사카 유니버설 스튜디오 (USJ)", "city": "오사카", "tag": "테마파크", "desc": "슈퍼 닌텐도 월드와 해리포터 마법 세계를 만나는 테마파크"},
+                {"name": "교토 아라시야마 대나무숲", "city": "교토", "tag": "자연/힐링", "desc": "바람에 흔들리는 청량한 대나무 소리를 들으며 걷는 치쿠린 산책로"},
+                {"name": "교토 후시미 이나리 신사", "city": "교토", "tag": "역사명소", "desc": "끝없이 이어진 수천 개의 붉은 토리이 터널로 유명한 신사"},
+                {"name": "후쿠오카 다자이후 텐만구", "city": "후쿠오카", "tag": "학문의신", "desc": "고즈넉한 고목과 매화나무, 우메가에 모찌가 유명한 신사"},
+                {"name": "삿포로 오타루 운하", "city": "삿포로", "tag": "로맨틱야경", "desc": "가스등 불빛과 옛 석조 창고가 어우러져 동화 같은 풍경을 자랑하는 운하"}
             ],
             "phrases": [
                 {"ko": "안녕하세요", "native": "こんにちは", "pron": "곤니치와"},
@@ -778,10 +857,23 @@ elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
         },
         "🥟 중국": {
             "title": "중국 여행 플래너 (China)", "city": "Beijing", "curr": "CNY", "lang": "zh-CN",
+            "best_season": "가을(9~11월) & 봄(4~5월)",
+            "season_desc": "중국의 청명한 가을 하늘(천고마비)과 온화한 기온 덕분에 자금성, 만리장성 등 야외 역사 유적을 쾌적하게 걷기 좋습니다.",
+            "festivals": [
+                {"name": "하얼빈 빙등제 (빙설대세계) ❄️", "time": "12월 말 ~ 2월", "desc": "거대한 얼음성과 눈 조각에 화려한 조명이 더해지는 세계 최대 겨울 축제"},
+                {"name": "원소절 (등불 축제) 🏮", "time": "음력 1월 15일 (2월)", "desc": "전통 한지 등불과 용춤 퍼레이드로 밤거리를 환하게 밝히는 명절"},
+                {"name": "단오절 용선 축제 🚣", "time": "음력 5월 5일 (6월)", "desc": "쭝쯔(대나무잎 주먹밥)를 나누어 먹으며 북소리에 맞춰 펼쳐지는 용선 경주"}
+            ],
             "spots": [
-                {"name": "베이징 자금성", "city": "Beijing", "tag": "역사유적", "desc": "황제의 역사가 깃든 세계 최대 규모의 궁궐"},
-                {"name": "상하이 와이탄", "city": "Shanghai", "tag": "야경명소", "desc": "황푸강변 근대 건축과 마천루 파노라마"},
-                {"name": "청두 판다 생태기지", "city": "Chengdu", "tag": "생태공원", "desc": "귀여운 자이언트 판다 보호 연구 센터"}
+                {"name": "베이징 자금성 (고궁박물원)", "city": "베이징", "tag": "세계문화유산", "desc": "명·청 왕조 황제들의 거처이자 세계에서 가장 거대한 궁궐 건축군"},
+                {"name": "베이징 만리장성 (팔달령)", "city": "베이징", "tag": "불가사의", "desc": "산맥 능선을 따라 장엄하게 뻗어있는 인류 역사상 최대의 군사 방어벽"},
+                {"name": "베이징 이화원", "city": "베이징", "tag": "황실정원", "desc": "거대한 곤명호수와 만수산이 빚어내는 황실 최대의 여름 별궁"},
+                {"name": "상하이 와이탄 & 동방명주", "city": "상하이", "tag": "마천루야경", "desc": "황푸강변을 마주한 100년 근대 유럽풍 건물과 미래형 초고층 빌딩 숲"},
+                {"name": "상하이 예원 & 옛거리", "city": "상하이", "tag": "명나라정원", "desc": "정교한 바위 정원과 누각, 육즙 가득한 소롱포 맛집이 가득한 곳"},
+                {"name": "청두 판다 번식연구기지", "city": "청두", "tag": "힐링동물", "desc": "대나무를 먹고 뒹구는 귀여운 자이언트 판다를 눈앞에서 보는 생태 공원"},
+                {"name": "시안 진시황 병마용박물관", "city": "시안", "tag": "고대유적", "desc": "각기 다른 표정으로 황제를 지키는 수천 구의 실물 크기 흙인형 군대"},
+                {"name": "장자제 (장가계) 천문산", "city": "장자제", "tag": "절경자연", "desc": "영화 아바타의 모티브가 된 기암괴석 봉우리와 아찔한 유리 잔도"},
+                {"name": "구이린 (계림) 리장 유람", "city": "구이린", "tag": "수묵산수화", "desc": "한편의 동양 수묵화 속을 배를 타고 유람하는 듯한 카르스트 봉우리"}
             ],
             "phrases": [
                 {"ko": "안녕하세요", "native": "你好", "pron": "니하오"},
@@ -793,10 +885,23 @@ elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
         },
         "🍔 미국": {
             "title": "미국 여행 플래너 (USA)", "city": "New York", "curr": "USD", "lang": "en-US",
+            "best_season": "봄(4~6월) & 가을(9~11월)",
+            "season_desc": "뉴욕과 샌프란시스코의 맑고 쾌적한 도시 걷기, 캘리포니아와 국립공원의 온화한 날씨를 만끽할 수 있는 최고의 시즌입니다.",
+            "festivals": [
+                {"name": "코첼라 밸리 뮤직 페스티벌 🎸", "time": "4월 중순", "desc": "캘리포니아 사막에서 펼쳐지는 세계 최대 규모의 음악 & 아트 페스티벌"},
+                {"name": "뉴올리언스 마디그라 카니발 🎭", "time": "2~3월 (사순절 직전)", "desc": "재즈의 본고장에서 펼쳐지는 가면과 화려한 구슬 목걸이 퍼레이드"},
+                {"name": "메이시스 추수감사절 퍼레이드 🎈", "time": "11월 넷째 주 목요일", "desc": "뉴욕 맨해튼 중심가를 가득 채우는 거대한 캐릭터 풍선 행진"}
+            ],
             "spots": [
-                {"name": "뉴욕 센트럴 파크", "city": "New York", "tag": "도심공원", "desc": "도심 한가운데에서 누리는 여유로운 산책"},
-                {"name": "LA 그리피스 천문대", "city": "Los Angeles", "tag": "일몰/야경", "desc": "LA 시내와 할리우드 사인을 조망하는 명소"},
-                {"name": "샌프란시스코 금문교", "city": "San Francisco", "tag": "랜드마크", "desc": "태평양과 만을 가로지르는 붉은 현수교"}
+                {"name": "뉴욕 센트럴 파크", "city": "뉴욕", "tag": "도심오아시스", "desc": "마천루 숲속 드넓은 호수와 잔디밭에서 즐기는 여유로운 피크닉"},
+                {"name": "뉴욕 자유의 여신상 & 브루클린교", "city": "뉴욕", "tag": "미국상징", "desc": "페리를 타고 바라보는 자유의 여신상과 맨해튼 스카이라인"},
+                {"name": "뉴욕 타임스퀘어 & 브로드웨이", "city": "뉴욕", "tag": "문화예술", "desc": "24시간 번쩍이는 초대형 전광판과 세계 최고의 뮤지컬 공연장"},
+                {"name": "LA 그리피스 천문대", "city": "로스앤젤레스", "tag": "선셋/야경", "desc": "영화 라라랜드 배경지이자 할리우드 사인을 내려다보는 명소"},
+                {"name": "LA 산타모니카 피어", "city": "로스앤젤레스", "tag": "해변놀이공원", "desc": "루트 66의 종점이자 태평양 바다 위 관람차로 유명한 클래식 피어"},
+                {"name": "샌프란시스코 금문교 & 피셔맨스워프", "city": "샌프란시스코", "tag": "랜드마크", "desc": "붉은 현수교를 가르는 해무와 바다사자를 만나는 해안 부두"},
+                {"name": "라스베이거스 스트립 호텔거리", "city": "라스베이거스", "tag": "불야성엔터", "desc": "벨라지오 분수쇼와 화려한 테마 호텔들이 줄지어 선 엔터테인먼트의 수도"},
+                {"name": "그랜드 캐니언 국립공원", "city": "애리조나", "tag": "대자연불가사의", "desc": "수억 년 콜로라도 강의 침식이 빚어낸 압도적 스케일의 붉은 대협곡"},
+                {"name": "하와이 오아후 와이키키 해변", "city": "하와이", "tag": "휴양파라다이스", "desc": "다이아몬드 헤드를 배경으로 서핑과 휴식을 만끽하는 최고의 휴양지"}
             ],
             "phrases": [
                 {"ko": "체크인하고 싶습니다", "native": "I'd like to check in, please.", "pron": "아이드 라이크 투 체크인 플리즈"},
@@ -831,27 +936,60 @@ elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
                 </div>
                 """, unsafe_allow_html=True)
 
-    st.markdown("### ✈️ 추천 여행 명소")
-    cols = st.columns(3)
-    for i, s in enumerate(info["spots"]):
-        with cols[i]:
-            st.markdown(f"""
-            <div class="spot-card">
-                <span class="spot-tag">{s['tag']}</span>
-                <span class="spot-tag" style="background:#e4d6fc; color:#4a2382;">{s['city']}</span>
-                <div class="spot-title" style="margin-top:6px; font-size:15px;">{s['name']}</div>
-                <div style="font-size:12px; color:#5c4973; margin-top:4px;">{s['desc']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button(f"➕ 플래너 담기", key=f"spot_{curr_page}_{i}"):
-                item_str = f"[{s['city']}] {s['name']}"
-                if item_str not in st.session_state.my_plan:
-                    st.session_state.my_plan.append(item_str)
-                    save_plans(st.session_state.my_plan)
-                    st.success(f"'{s['name']}' 저장 완료")
+    st.divider()
+
+    # 추천 시기 및 대표 축제 섹션
+    st.markdown("### 🌸 추천 여행 시기 & 캘린더 축제")
+    s_col1, s_col2 = st.columns([4, 6], gap="medium")
+    with s_col1:
+        st.markdown(f"""
+        <div class="festival-card">
+            <span class="spot-tag">Best Season</span>
+            <div style="font-size:16px; font-weight:bold; color:#3b2359; margin-top:4px;">{info['best_season']}</div>
+            <div style="font-size:12px; color:#5c4873; margin-top:6px; line-height:1.5;">{info['season_desc']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with s_col2:
+        f_cols = st.columns(3)
+        for i, f in enumerate(info["festivals"]):
+            with f_cols[i]:
+                st.markdown(f"""
+                <div class="spot-card" style="min-height:130px; padding:10px 12px;">
+                    <span class="spot-tag" style="font-size:10px;">{f['time']}</span>
+                    <div style="font-size:13px; font-weight:bold; color:#3b2359; margin-top:3px;">{f['name']}</div>
+                    <div style="font-size:11px; color:#78668f; margin-top:2px;">{f['desc']}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
     st.divider()
 
+    # 9개 관광지 그리드 표시 (3x3)
+    st.markdown(f"### ✈️ {curr_page.split()[1]} 핵심 필수 명소 9선")
+    st.caption("여행객들이 가장 사랑하는 핵심 명소 9곳입니다. 플래너에 담아 나만의 일정을 만들어보세요!")
+
+    for row in range(0, 9, 3):
+        cols = st.columns(3)
+        for i in range(3):
+            s = info["spots"][row + i]
+            with cols[i]:
+                st.markdown(f"""
+                <div class="spot-card" style="min-height: 145px;">
+                    <span class="spot-tag">{s['tag']}</span>
+                    <span class="spot-tag" style="background:#e4d6fc; color:#4a2382;">{s['city']}</span>
+                    <div class="spot-title" style="margin-top:6px; font-size:15.5px;">{s['name']}</div>
+                    <div style="font-size:12px; color:#5c4973; margin-top:4px;">{s['desc']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button("➕ 플래너 담기", key=f"spot_{curr_page}_{row+i}"):
+                    item_str = f"[{s['city']}] {s['name']}"
+                    if item_str not in st.session_state.my_plan:
+                        st.session_state.my_plan.append(item_str)
+                        save_plans(st.session_state.my_plan)
+                        st.success(f"'{s['name']}' 저장 완료!")
+
+    st.divider()
+
+    # 현지어 TTS
     st.markdown("### 🗣️ 필수 생존 회화 (현지어 오디오 발음)")
     ph_cols = st.columns(len(info["phrases"]))
     for idx, ph in enumerate(info["phrases"]):
@@ -871,11 +1009,11 @@ elif curr_page == "🥐 기타 국가":
     st.write("")
 
     others_dict = {
-        "🇫🇷 프랑스 파리 (Paris)": {"city": "Paris", "curr": "EUR", "spots": "에펠탑, 루브르 박물관, 몽마르트르 언덕"},
-        "🇮🇹 이탈리아 로마 (Rome)": {"city": "Rome", "curr": "EUR", "spots": "콜로세움, 트레비 분수, 바티칸 미술관"},
-        "🇪🇸 스페인 바르셀로나 (Barcelona)": {"city": "Barcelona", "curr": "EUR", "spots": "사그라다 파밀리아, 구엘 공원, 람블라스 거리"},
-        "🇹🇭 태국 방콕 (Bangkok)": {"city": "Bangkok", "curr": "THB", "spots": "왓 아룬, 카오산 로드, 아이콘시암"},
-        "🇻🇳 베트남 다낭 (Da Nang)": {"city": "Da Nang", "curr": "VND", "spots": "미케비치, 바나힐 골든브릿지, 호이안 구시가지"}
+        "🇫🇷 프랑스 파리 (Paris)": {"city": "Paris", "curr": "EUR", "spots": "에펠탑, 루브르 박물관, 몽마르트르 언덕", "season": "5~6월, 9~10월 (초여름 & 초가을)", "festival": "바스티유 데이 축제 (7월 14일 에펠탑 불꽃쇼)"},
+        "🇮🇹 이탈리아 로마 (Rome)": {"city": "Rome", "curr": "EUR", "spots": "콜로세움, 트레비 분수, 바티칸 미술관", "season": "4~5월, 10~11월 (봄 & 가을)", "festival": "베네치아 카니발 (2월 화려한 가면 축제)"},
+        "🇪🇸 스페인 바르셀로나 (Barcelona)": {"city": "Barcelona", "curr": "EUR", "spots": "사그라다 파밀리아, 구엘 공원, 람블라스 거리", "season": "5~6월, 9~10월 (지중해 쾌적기)", "festival": "메르세 축제 (9월 말 인간 탑 쌓기)"},
+        "🇹🇭 태국 방콕 (Bangkok)": {"city": "Bangkok", "curr": "THB", "spots": "왓 아룬, 카오산 로드, 아이콘시암", "season": "11~2월 (건기 시즌 시원한 날씨)", "festival": "송끄란 물축제 (4월 중순 새해 물총 축제)"},
+        "🇻🇳 베트남 다낭 (Da Nang)": {"city": "Da Nang", "curr": "VND", "spots": "미케비치, 바나힐 골든브릿지, 호이안 구시가지", "season": "2~5월 (화창하고 비가 적은 건기)", "festival": "다낭 국제 불꽃축제 (6~7월 한강 불꽃쇼)"}
     }
 
     pick = st.selectbox("도시 선택", list(others_dict.keys()))
@@ -900,11 +1038,13 @@ elif curr_page == "🥐 기타 국가":
                 </div>
                 """, unsafe_allow_html=True)
 
+    # 기타 도시 추천 시기 & 축제 안내
     st.markdown(f"""
-    <div class="spot-card">
-        <span class="spot-tag">핵심 코스</span>
-        <div class="spot-title" style="margin-top:6px; font-size:15px;">📍 {pick} 추천 코스</div>
-        <div style="font-size:12px; color:#5c4973; margin-top:6px;">{t_data['spots']}</div>
+    <div class="festival-card">
+        <span class="spot-tag">Best Season & Festival</span>
+        <div style="font-size:16px; font-weight:bold; color:#3b2359; margin-top:4px;">🌸 최적 추천 시기: {t_data['season']}</div>
+        <div style="font-size:13px; color:#5c4873; margin-top:4px;">🎪 <b>대표 축제:</b> {t_data['festival']}</div>
+        <div style="font-size:12px; color:#666; margin-top:6px;">📍 <b>추천 핵심 코스:</b> {t_data['spots']}</div>
     </div>
     """, unsafe_allow_html=True)
     if st.button("➕ 이 도시 코스 전체 담기"):
