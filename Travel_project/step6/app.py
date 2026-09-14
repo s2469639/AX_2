@@ -1,5 +1,8 @@
 import os
+import sys
 import json
+import base64
+from pathlib import Path
 import requests
 import streamlit as st
 import streamlit.components.v1 as components
@@ -25,123 +28,181 @@ KAKAO_REST_API_KEY = get_key("KAKAO_REST_API_KEY") or get_key("KAKAO_REST_KEY")
 KAKAO_JS_API_KEY = get_key("KAKAO_JS_API_KEY") or get_key("MAP_API_KEY")
 
 st.set_page_config(
-    page_title="Fluffy Travel Planner ✨",
-    page_icon="🌸",
+    page_title="Travel App",
+    page_icon="✈️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # -------------------------------------------------------------
-# 2. 뽀용한 파스텔 핑크 글래스모피즘 CSS
+# 2. 로컬 폰트(에이투지체) Base64 로드 & 라벤더 글래스 UI CSS
 # -------------------------------------------------------------
-fluffy_theme_css = """
+BASE_DIR = Path(__file__).resolve().parent
+
+def get_font_base64(font_filename: str) -> str:
+    font_path = BASE_DIR / font_filename
+    if font_path.exists():
+        with open(font_path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    return ""
+
+font_regular_b64 = get_font_base64("에이투지체-4Regular.ttf")
+font_semibold_b64 = get_font_base64("에이투지체-6SemiBold.ttf")
+
+font_face_css = ""
+if font_regular_b64:
+    font_face_css += f"""
+    @font-face {{
+        font-family: 'A2Z-Regular';
+        src: url(data:font/truetype;charset=utf-8;base64,{font_regular_b64}) format('truetype');
+        font-weight: normal;
+        font-style: normal;
+    }}
+    """
+if font_semibold_b64:
+    font_face_css += f"""
+    @font-face {{
+        font-family: 'A2Z-SemiBold';
+        src: url(data:font/truetype;charset=utf-8;base64,{font_semibold_b64}) format('truetype');
+        font-weight: 600;
+        font-style: normal;
+    }}
+    """
+
+custom_theme_css = f"""
 <style>
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+{font_face_css}
 
-.stApp {
-    background: linear-gradient(135deg, #fff5f7 0%, #fdecef 45%, #fce4ec 100%);
-    font-family: 'Pretendard', sans-serif;
-    color: #4a3b40;
-}
+/* 전역 폰트 및 라벤더 물빛 배경 */
+html, body, [class*="css"], .stApp {{
+    font-family: 'A2Z-Regular', -apple-system, sans-serif !important;
+    background: linear-gradient(135deg, #f8f5ff 0%, #f1e9ff 50%, #e9ddfc 100%) !important;
+    color: #2b1f3d !important;
+}}
 
-section[data-testid="stSidebar"] {
-    background-color: rgba(255, 245, 247, 0.75) !important;
-    backdrop-filter: blur(12px);
-    border-right: 1px solid rgba(255, 192, 203, 0.4);
-}
+/* 제목 및 강조 텍스트는 SemiBold 적용 */
+h1, h2, h3, h4, h5, .stHeading, .page-title, .spot-title, .weather-temp {{
+    font-family: 'A2Z-SemiBold', sans-serif !important;
+    color: #3b2359 !important;
+}}
 
-/* 일반 핑크 버튼 */
-.stButton > button {
-    background: linear-gradient(135deg, #ffb6c1 0%, #ff8fab 100%) !important;
-    color: white !important;
+/* 사이드바 */
+section[data-testid="stSidebar"] {{
+    background-color: rgba(248, 244, 255, 0.85) !important;
+    backdrop-filter: blur(14px);
+    border-right: 1.5px solid rgba(215, 196, 245, 0.5);
+}}
+
+/* 라벤더 펄 버튼 */
+.stButton > button {{
+    font-family: 'A2Z-SemiBold', sans-serif !important;
+    background: linear-gradient(135deg, #b99bf5 0%, #9a75e8 100%) !important;
+    color: #ffffff !important;
     border: none !important;
-    border-radius: 18px !important;
-    padding: 8px 18px !important;
-    font-weight: bold !important;
-    box-shadow: 0 4px 15px rgba(255, 143, 171, 0.3) !important;
+    border-radius: 16px !important;
+    padding: 9px 18px !important;
+    box-shadow: 0 4px 14px rgba(162, 127, 237, 0.35) !important;
     transition: all 0.2s ease-in-out !important;
     width: 100%;
-}
-.stButton > button:hover {
+}}
+.stButton > button:hover {{
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 143, 171, 0.45) !important;
-}
+    box-shadow: 0 6px 18px rgba(162, 127, 237, 0.5) !important;
+}}
 
-/* 입력 필드 */
-div[data-baseweb="input"], div[data-baseweb="select"] {
-    border-radius: 16px !important;
-    background-color: rgba(255, 255, 255, 0.75) !important;
-    border: 1.5px solid #ffd1dc !important;
-}
+/* 입력창 & 셀렉트박스 */
+div[data-baseweb="input"], div[data-baseweb="select"] {{
+    border-radius: 14px !important;
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    border: 1.5px solid #d4c2f7 !important;
+}}
 
-/* 감성 뽀용 글래스 카드 */
-.weather-card {
-    background: rgba(255, 255, 255, 0.68);
+/* 고대비 날씨 카드 (흰 바탕에서도 또렷함 보장) */
+.weather-card {{
+    background: rgba(255, 255, 255, 0.82);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1.5px solid rgba(255, 255, 255, 0.85);
-    border-radius: 20px;
-    padding: 18px 20px;
-    box-shadow: 0 10px 25px rgba(255, 182, 193, 0.22);
-    margin-bottom: 14px;
-}
-.weather-city {
+    border: 1.5px solid #dcd0f7;
+    border-radius: 18px;
+    padding: 16px 20px;
+    box-shadow: 0 8px 20px rgba(181, 155, 230, 0.2);
+    margin-bottom: 12px;
+}}
+.weather-city {{
+    font-family: 'A2Z-SemiBold', sans-serif;
     font-size: 14px;
-    font-weight: 700;
-    color: #e06d88;
-    margin-bottom: 4px;
-}
-.weather-temp {
+    color: #6c46a8;
+    margin-bottom: 2px;
+}}
+.weather-temp {{
     font-size: 30px;
-    font-weight: 800;
-    color: #3d3135;
-    letter-spacing: -1px;
-}
-.weather-desc {
+    color: #241438;
+    margin: 2px 0;
+}}
+.weather-desc-badge {{
     font-size: 12px;
-    color: #946b77;
-    background: #ffeef2;
+    color: #583391;
+    background: #eedfff;
     display: inline-block;
     padding: 2px 10px;
-    border-radius: 12px;
-    font-weight: 600;
-}
-.weather-sub {
+    border-radius: 10px;
+    font-weight: bold;
+}}
+.weather-details {{
     font-size: 12px;
-    color: #8c737a;
-    margin-top: 8px;
-}
+    color: #554469;
+    margin-top: 6px;
+    font-weight: 500;
+}}
 
 /* 플래너 스팟 카드 */
-.spot-card {
-    background: rgba(255, 255, 255, 0.75);
-    border: 1.5px solid #ffd6e0;
-    border-radius: 18px;
+.spot-card {{
+    background: rgba(255, 255, 255, 0.85);
+    border: 1.5px solid #ded3f7;
+    border-radius: 16px;
     padding: 14px 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 12px rgba(255, 182, 193, 0.15);
-}
-.spot-title {
-    font-size: 15px;
-    font-weight: bold;
-    color: #e06d88;
-}
-.spot-tag {
+    margin-bottom: 10px;
+    box-shadow: 0 4px 14px rgba(193, 172, 235, 0.15);
+}}
+.spot-tag {{
     display: inline-block;
-    background: #ffe8ee;
-    color: #d1506d;
+    background: #f1e6ff;
+    color: #6a3ab2;
     padding: 2px 8px;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 11px;
-    font-weight: 600;
+    font-family: 'A2Z-SemiBold', sans-serif;
     margin-right: 4px;
-}
+}}
 </style>
 """
-st.markdown(fluffy_theme_css, unsafe_allow_html=True)
+st.markdown(custom_theme_css, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# 3. API 통신 및 헬퍼 함수
+# 3. 플래너 JSON 로컬 영구 저장 (백엔드 불필요)
+# -------------------------------------------------------------
+PLAN_FILE = BASE_DIR / "travel_plans.json"
+
+def load_saved_plans():
+    if PLAN_FILE.exists():
+        try:
+            with open(PLAN_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+def save_plans(plans):
+    try:
+        with open(PLAN_FILE, "w", encoding="utf-8") as f:
+            json.dump(plans, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+if "my_plan" not in st.session_state:
+    st.session_state.my_plan = load_saved_plans()
+
+# -------------------------------------------------------------
+# 4. API 함수들
 # -------------------------------------------------------------
 @st.cache_data(ttl=600, show_spinner=False)
 def kakao_search_place(query: str):
@@ -199,12 +260,12 @@ def get_exchange_rate(base: str, target: str):
         pass
     return None, None
 
-def render_fluffy_weather_card(title: str, weather_data: dict):
+def render_weather_card(title: str, weather_data: dict):
     if not weather_data or "main" not in weather_data:
         st.markdown(f"""
         <div class="weather-card">
-            <div class="weather-city">✨ {title}</div>
-            <div class="weather-desc">날씨 로딩 중...</div>
+            <div class="weather-city">✈️ {title}</div>
+            <div class="weather-details">날씨 정보 로딩 대기 중...</div>
         </div>
         """, unsafe_allow_html=True)
         return
@@ -221,32 +282,32 @@ def render_fluffy_weather_card(title: str, weather_data: dict):
     <div class="weather-card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <div class="weather-city">✨ {title}</div>
+                <div class="weather-city">✈️ {title}</div>
                 <div class="weather-temp">{temp}°C</div>
-                <div class="weather-desc">{desc}</div>
+                <div class="weather-desc-badge">{desc}</div>
             </div>
-            <img src="{icon_url}" width="65" style="filter: drop-shadow(0 4px 6px rgba(255,143,171,0.3));">
+            <img src="{icon_url}" width="65">
         </div>
-        <div class="weather-sub">
-            체감 {feels}°C · 습도 {humidity}% · 바람 {wind}m/s
+        <div class="weather-details">
+            체감 {feels}°C · 습도 {humidity}% · 풍속 {wind}m/s
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# 4. 카카오 지도 렌더러 (검증된 방식)
+# 5. 카카오 지도 렌더러 (검증 완료된 형태)
 # -------------------------------------------------------------
 def render_kakao_map(lat: float, lon: float, place_name: str = "", nearby_places: list = None):
     if not KAKAO_JS_API_KEY:
-        st.warning("카카오 지도 키가 설정되지 않았습니다.")
+        st.warning("카카오 지도 JS 키가 없습니다.")
         return
 
     nearby_json = json.dumps(nearby_places or [], ensure_ascii=False)
 
     html_code = f"""
-    <div id="map" style="width:100%;height:480px;border-radius:20px;background:#fff5f7;
-         display:flex;align-items:center;justify-content:center;color:#b08d98;font-size:13px;border:2px solid #ffd6e0;">
-         지도를 몽환적으로 불러오는 중... ✨
+    <div id="map" style="width:100%;height:480px;border-radius:18px;background:#f8f5ff;
+         display:flex;align-items:center;justify-content:center;color:#6b528e;font-size:13px;border:2px solid #ded2f7;">
+         지도를 불러오는 중입니다... ✈️
     </div>
     <script>
         (function() {{
@@ -277,7 +338,7 @@ def render_kakao_map(lat: float, lon: float, place_name: str = "", nearby_places
                     var mainMarker = new kakao.maps.Marker({{ position: centerPos, map: map }});
                     var mainIw = new kakao.maps.InfoWindow({{
                         content: '<div style="padding:8px 12px;font-size:12px;min-width:160px;font-family:sans-serif;line-height:1.4;">' +
-                                 '<strong style="color:#ff6b8b;font-size:13px;">📍 {place_name}</strong></div>'
+                                 '<strong style="color:#7748c2;font-size:13px;">📍 {place_name}</strong></div>'
                     }});
                     mainIw.open(map, mainMarker);
 
@@ -292,9 +353,9 @@ def render_kakao_map(lat: float, lon: float, place_name: str = "", nearby_places
                             var marker = new kakao.maps.Marker({{ position: pPos, map: map }});
 
                             var content = '<div style="padding:8px 10px;font-size:12px;max-width:210px;line-height:1.4;font-family:sans-serif;">' +
-                                          '<b style="color:#333;">' + p.place_name + '</b><br>' +
-                                          '<span style="font-size:11px;color:#888;">' + (p.road_address_name || p.address_name) + '</span><br>' +
-                                          (p.place_url ? '<a href="' + p.place_url + '" target="_blank" style="color:#ff6b8b;font-weight:bold;font-size:11px;text-decoration:none;">상세보기 ↗</a>' : '') +
+                                          '<b style="color:#222;">' + p.place_name + '</b><br>' +
+                                          '<span style="font-size:11px;color:#777;">' + (p.road_address_name || p.address_name) + '</span><br>' +
+                                          (p.place_url ? '<a href="' + p.place_url + '" target="_blank" style="color:#6d3fc2;font-weight:bold;font-size:11px;text-decoration:none;">상세보기 ↗</a>' : '') +
                                           '</div>';
 
                             var iw = new kakao.maps.InfoWindow({{ content: content, removable: true }});
@@ -317,13 +378,10 @@ def render_kakao_map(lat: float, lon: float, place_name: str = "", nearby_places
     components.html(html_code, height=500)
 
 # -------------------------------------------------------------
-# 5. 세션 상태 초기화 (페이지 네비게이션 & 여행 플래너 바구니)
+# 6. 세션 기본값 및 사이드바 (페이지 탭 메뉴)
 # -------------------------------------------------------------
 if "current_page" not in st.session_state:
     st.session_state.current_page = "🍲 한국"
-
-if "my_plan" not in st.session_state:
-    st.session_state.my_plan = []
 
 preset_defaults = {
     "경복궁": {"x": "126.9770", "y": "37.5796", "place_name": "경복궁", "road_address_name": "서울 종로구 사직로 161", "place_url": "https://place.map.kakao.com/8129210"},
@@ -334,77 +392,76 @@ preset_defaults = {
 if "selected_place" not in st.session_state:
     st.session_state.selected_place = preset_defaults["경복궁"]
 
-# -------------------------------------------------------------
-# 6. 사이드바: 라디오 대신 "페이지 전환 탭 버튼"
-# -------------------------------------------------------------
 with st.sidebar:
-    st.markdown("<h2 style='color:#e06d88;'>🌸 Travel Note</h2>", unsafe_allow_html=True)
-    st.caption("가고 싶은 나라 페이지를 클릭하세요 ✨")
+    st.markdown("<h2 style='color:#4a2c7a; margin-bottom: 2px;'>✈️ Travel App</h2>", unsafe_allow_html=True)
+    st.caption("스마트 여행 플래너 & 국가별 가이드")
     st.write("")
 
-    pages = [
-        ("🍲 한국", "국내 힐링 & 명소"),
-        ("🍣 일본", "도쿄 · 오사카 · 교토"),
-        ("🥟 중국", "베이징 · 상하이"),
-        ("🍔 미국", "뉴욕 · LA · 샌프란시스코"),
-        ("🥐 기타 국가", "유럽 및 아시아 명소"),
-        ("🍧 환율 계산기", "실시간 경비 계산")
+    nav_pages = [
+        "🍲 한국",
+        "🍣 일본",
+        "🥟 중국",
+        "🍔 미국",
+        "🥐 기타 국가",
+        "🍧 환율 계산기"
     ]
 
-    for p_id, p_desc in pages:
+    for p_id in nav_pages:
         is_active = (st.session_state.current_page == p_id)
-        btn_label = f"✨ {p_id}" if is_active else f"   {p_id}"
-        if st.button(btn_label, key=f"nav_{p_id}"):
+        btn_txt = f"✈️  {p_id}" if is_active else f"     {p_id}"
+        if st.button(btn_txt, key=f"btn_{p_id}"):
             st.session_state.current_page = p_id
             st.rerun()
 
     st.divider()
 
-    # 사이드바 하단: 내가 담은 여행 버킷리스트
-    st.markdown("##### 📝 나의 여행 플래너 보관함")
+    # 영구 저장되는 여행 플래너 보관함
+    st.markdown("##### 📋 내 여행 플래너 보관함")
     if st.session_state.my_plan:
         for idx, item in enumerate(st.session_state.my_plan, 1):
-            st.caption(f"{idx}. {item}")
-        if st.button("🗑️ 전체 일정 비우기"):
+            st.markdown(f"<div style='font-size:12px; color:#402d57; margin-bottom:4px;'><b>{idx}.</b> {item}</div>", unsafe_allow_html=True)
+        
+        st.write("")
+        if st.button("🗑️ 전체 보관함 비우기"):
             st.session_state.my_plan = []
+            save_plans([])
             st.rerun()
     else:
-        st.caption("아직 담은 여행지가 없어요! 마음에 드는 스팟을 담아보세요 🍓")
+        st.caption("보관된 여행지가 없습니다. 추천 스팟을 추가해보세요.")
 
 # -------------------------------------------------------------
-# 7. 메인 페이지 로직 (국가별 추천 여행지 + 플래너 기능)
+# 7. 메인 화면 로직
 # -------------------------------------------------------------
 curr_page = st.session_state.current_page
 
-# [PAGE 1] 한국
+# [1] 한국
 if curr_page == "🍲 한국":
-    st.markdown("<h2 style='color:#e06d88;'>🍲 국내 감성 여행 플래너</h2>", unsafe_allow_html=True)
-    st.caption("실시간 날씨와 지도로 나만의 여행 코스를 완성해보세요 ☁️")
+    st.markdown("<h2 style='color:#3b2359;'>🍲 국내 여행 플래너</h2>", unsafe_allow_html=True)
+    st.caption("실시간 날씨와 지도로 나만의 국내 여행 코스를 계획하세요.")
     st.write("")
 
-    # 실시간 날씨
     w1, w2, w3 = st.columns(3)
-    with w1: render_fluffy_weather_card("서울 (Seoul)", get_weather_by_city("Seoul"))
-    with w2: render_fluffy_weather_card("부산 (Busan)", get_weather_by_city("Busan"))
-    with w3: render_fluffy_weather_card("제주 (Jeju)", get_weather_by_city("Jeju"))
+    with w1: render_weather_card("서울 (Seoul)", get_weather_by_city("Seoul"))
+    with w2: render_weather_card("부산 (Busan)", get_weather_by_city("Busan"))
+    with w3: render_weather_card("제주 (Jeju)", get_weather_by_city("Jeju"))
 
     st.divider()
 
     col_l, col_r = st.columns([5, 7], gap="large")
 
     with col_l:
-        st.markdown("#### 🗺️ 핫플레이스 탐색")
-        user_query = st.text_input("가고 싶은 곳 검색", placeholder="예: 성수동 카페거리, 광안리 해변")
-        preset_choice = st.selectbox("추천 힐링 명소 빠른 선택", list(preset_defaults.keys()))
+        st.markdown("#### 🔍 장소 검색 및 선택")
+        user_query = st.text_input("직접 장소 검색", placeholder="예: 해운대 맛집, 성수동 카페")
+        preset_choice = st.selectbox("추천 명소 선택", list(preset_defaults.keys()))
         
-        if st.button("해당 스팟으로 이동 슝 ✨"):
+        if st.button("선택 명소로 지도 이동"):
             st.session_state.selected_place = preset_defaults[preset_choice]
 
         if user_query.strip():
             places, _ = kakao_search_place(user_query.strip())
             if places:
                 opts = [f"{p['place_name']} ({p.get('road_address_name') or p.get('address_name')})" for p in places]
-                p_idx = st.selectbox("🎯 검색 목록", range(len(opts)), format_func=lambda i: opts[i])
+                p_idx = st.selectbox("🎯 검색 결과", range(len(opts)), format_func=lambda i: opts[i])
                 st.session_state.selected_place = places[p_idx]
 
         place = st.session_state.selected_place
@@ -414,80 +471,80 @@ if curr_page == "🍲 한국":
 
         st.markdown(f"""
         <div class="spot-card">
-            <span class="spot-tag">현재 선택지</span>
-            <div class="spot-title" style="font-size:17px; margin-top:4px;">📍 {name}</div>
-            <div style="font-size:12px; color:#888; margin: 4px 0;">{address}</div>
+            <span class="spot-tag">선택 장소</span>
+            <div class="spot-title" style="font-size:16px; margin-top:4px;">📍 {name}</div>
+            <div style="font-size:12px; color:#5c4973; margin-top:3px;">{address}</div>
         </div>
         """, unsafe_allow_html=True)
 
-        c_btn1, c_btn2 = st.columns(2)
-        with c_btn1:
-            if st.button("➕ 내 플래너에 담기"):
-                plan_item = f"[한국] {name} ({address})"
-                if plan_item not in st.session_state.my_plan:
-                    st.session_state.my_plan.append(plan_item)
-                    st.success("보관함에 쏙 들어갔어요! 🌸")
-        with c_btn2:
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("➕ 플래너에 담기"):
+                item_str = f"[한국] {name}"
+                if item_str not in st.session_state.my_plan:
+                    st.session_state.my_plan.append(item_str)
+                    save_plans(st.session_state.my_plan)
+                    st.success("플래너에 저장되었습니다.")
+        with c2:
             if place.get("place_url"):
                 st.link_button("카카오맵 상세 ↗", place["place_url"])
 
-        # 주변 편의시설
-        cat_picked = st.radio("주변 탐색 필터", ["선택 안 함", "🍴 맛집", "☕ 카페", "🏪 편의점"], horizontal=True)
+        cat_picked = st.radio("주변 탐색", ["선택 안 함", "🍴 맛집", "☕ 카페", "🏪 편의점"], horizontal=True)
         cat_map = {"🍴 맛집": "FD6", "☕ 카페": "CE7", "🏪 편의점": "CS2"}
         nearby = []
         if cat_picked in cat_map:
             nearby = kakao_search_category(cat_map[cat_picked], lat, lon)
 
         if nearby:
-            with st.container(height=200):
+            with st.container(height=180):
                 for i, p in enumerate(nearby, 1):
                     with st.expander(f"{i}. {p['place_name']}"):
                         st.caption(p.get("road_address_name") or p.get("address_name"))
 
     with col_r:
-        st.markdown("#### 📍 지도 프리뷰")
+        st.markdown("#### 🗺️ 카카오 지도")
         render_kakao_map(lat, lon, place_name=name, nearby_places=nearby)
 
-# [PAGE 2, 3, 4] 일본, 중국, 미국
+# [2, 3, 4] 일본, 중국, 미국
 elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
     country_data = {
         "🍣 일본": {
-            "title": "일본 감성 미식 여행 (Japan)",
+            "title": "일본 여행 플래너 (Japan)",
             "city": "Tokyo", "curr": "JPY",
             "spots": [
-                {"name": "도쿄 시부야 스카이", "city": "Tokyo", "tag": "야경명소", "desc": "도쿄 시내를 360도로 조망하는 루프탑 전망대"},
-                {"name": "교토 아라시야마 대나무숲", "city": "Kyoto", "tag": "자연/힐링", "desc": "신비로운 청량감을 주는 치쿠린 산책로"},
-                {"name": "오사카 도톤보리 & 글리코상", "city": "Osaka", "tag": "먹거리", "desc": "타코야키와 맛집이 가득한 오사카의 심장"}
+                {"name": "도쿄 시부야 스카이", "city": "Tokyo", "tag": "전망대", "desc": "도쿄 시내를 360도로 조망하는 루프탑 전망대"},
+                {"name": "교토 아라시야마 대나무숲", "city": "Kyoto", "tag": "자연", "desc": "신비로운 청량감을 주는 치쿠린 산책로"},
+                {"name": "오사카 도톤보리", "city": "Osaka", "tag": "미식거리", "desc": "화려한 간판과 맛집이 모여있는 중심가"}
             ]
         },
         "🥟 중국": {
-            "title": "중국 웅장 & 미식 여행 (China)",
+            "title": "중국 여행 플래너 (China)",
             "city": "Beijing", "curr": "CNY",
             "spots": [
-                {"name": "베이징 자금성 & 이화원", "city": "Beijing", "tag": "역사유적", "desc": "황제의 발자취를 따라 걷는 세계 최대 궁궐"},
-                {"name": "상하이 와이탄 야경", "city": "Shanghai", "tag": "도시야경", "desc": "황푸강변을 따라 펼쳐지는 근대 건축과 화려한 마천루"},
-                {"name": "청두 판다 번식기지", "city": "Chengdu", "tag": "힐링/동물", "desc": "귀여운 자이언트 판다를 만나는 생태 공원"}
+                {"name": "베이징 자금성", "city": "Beijing", "tag": "역사유적", "desc": "황제의 역사가 깃든 세계 최대 규모의 궁궐"},
+                {"name": "상하이 와이탄", "city": "Shanghai", "tag": "야경명소", "desc": "황푸강변 근대 건축과 마천루 파노라마"},
+                {"name": "청두 판다 생태기지", "city": "Chengdu", "tag": "생태공원", "desc": "귀여운 자이언트 판다 보호 연구 센터"}
             ]
         },
         "🍔 미국": {
-            "title": "미국 로맨틱 시티 여행 (USA)",
+            "title": "미국 여행 플래너 (USA)",
             "city": "New York", "curr": "USD",
             "spots": [
-                {"name": "뉴욕 센트럴 파크", "city": "New York", "tag": "도심힐링", "desc": "빌딩 숲 사이에서 베이글 들고 피크닉하기 좋은 곳"},
-                {"name": "LA 그리피스 천문대", "city": "Los Angeles", "tag": "선셋명소", "desc": "라라랜드 감성 그대로 할리우드 사인을 바라보는 언덕"},
-                {"name": "샌프란시스코 금문교 & 소살리토", "city": "San Francisco", "tag": "바다풍경", "desc": "자전거를 타고 바닷바람을 가르며 건너는 붉은 다리"}
+                {"name": "뉴욕 센트럴 파크", "city": "New York", "tag": "도심공원", "desc": "도심 한가운데에서 누리는 여유로운 산책"},
+                {"name": "LA 그리피스 천문대", "city": "Los Angeles", "tag": "일몰/야경", "desc": "LA 시내와 할리우드 사인을 조망하는 명소"},
+                {"name": "샌프란시스코 금문교", "city": "San Francisco", "tag": "랜드마크", "desc": "태평양과 만을 가로지르는 붉은 현수교"}
             ]
         }
     }
     info = country_data[curr_page]
-    st.markdown(f"<h2 style='color:#e06d88;'>{info['title']}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='color:#3b2359;'>{info['title']}</h2>", unsafe_allow_html=True)
     st.write("")
 
     col_w, col_e = st.columns(2, gap="large")
     with col_w:
-        st.markdown("#### 🌤️ 수도 실시간 날씨")
+        st.markdown("#### 🌤️ 현지 실시간 날씨")
         w = get_weather_by_city(info["city"])
-        render_fluffy_weather_card(f"{info['city']} 현재 날씨", w)
+        render_weather_card(f"{info['city']} 현재 날씨", w)
 
     with col_e:
         st.markdown(f"#### 💱 {info['curr']} 실시간 환율")
@@ -497,54 +554,52 @@ elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
                 k_rate = r["conversion_rate"]
                 st.markdown(f"""
                 <div class="weather-card">
-                    <div class="weather-city">💱 1,000 KRW 기준 환율</div>
+                    <div class="weather-city">💱 1,000 KRW 환산 금액</div>
                     <div class="weather-temp">{1000 * k_rate:,.2f} {info['curr']}</div>
-                    <div class="weather-desc">1 KRW = {k_rate:.4f} {info['curr']}</div>
+                    <div class="weather-desc-badge">1 KRW = {k_rate:.4f} {info['curr']}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
-    st.markdown("### 🎀 에디터 추천 명소 & 여행 플래너")
-    st.caption("마음에 드는 스팟의 '담기' 버튼을 눌러 나만의 일정표를 만들어보세요!")
-
+    st.markdown("### ✈️ 추천 여행 명소")
     cols = st.columns(3)
     for i, s in enumerate(info["spots"]):
         with cols[i]:
             st.markdown(f"""
             <div class="spot-card">
                 <span class="spot-tag">{s['tag']}</span>
-                <span class="spot-tag" style="background:#e8f4fd; color:#2b7ecb;">{s['city']}</span>
-                <div class="spot-title" style="margin-top:6px;">{s['name']}</div>
-                <div style="font-size:12px; color:#666; margin-top:4px;">{s['desc']}</div>
+                <span class="spot-tag" style="background:#e4d6fc; color:#4a2382;">{s['city']}</span>
+                <div class="spot-title" style="margin-top:6px; font-size:16px;">{s['name']}</div>
+                <div style="font-size:12px; color:#5c4973; margin-top:4px;">{s['desc']}</div>
             </div>
             """, unsafe_allow_html=True)
-            if st.button(f"💖 플래너에 담기", key=f"spot_{curr_page}_{i}"):
-                plan_name = f"[{curr_page.split()[1]}] {s['name']} ({s['tag']})"
-                if plan_name not in st.session_state.my_plan:
-                    st.session_state.my_plan.append(plan_name)
-                    st.success(f"'{s['name']}' 담기 완료! ✨")
+            if st.button(f"➕ 플래너 담기", key=f"spot_{curr_page}_{i}"):
+                item_str = f"[{curr_page.split()[1]}] {s['name']}"
+                if item_str not in st.session_state.my_plan:
+                    st.session_state.my_plan.append(item_str)
+                    save_plans(st.session_state.my_plan)
+                    st.success(f"'{s['name']}' 저장 완료")
 
-# [PAGE 5] 기타 국가
+# [5] 기타 국가
 elif curr_page == "🥐 기타 국가":
-    st.markdown("<h2 style='color:#e06d88;'>🥐 전 세계 감성 여행지 (Others)</h2>", unsafe_allow_html=True)
-    st.caption("낭만 가득한 글로벌 도시를 둘러보고 여행 계획을 세워보세요 🍰")
+    st.markdown("<h2 style='color:#3b2359;'>🥐 전 세계 주요 도시 플래너 (Others)</h2>", unsafe_allow_html=True)
     st.write("")
 
     others_dict = {
         "🇫🇷 프랑스 파리 (Paris)": {"city": "Paris", "curr": "EUR", "spots": "에펠탑, 루브르 박물관, 몽마르트르 언덕"},
-        "🇮🇹 이탈리아 로마 (Rome)": {"city": "Rome", "curr": "EUR", "spots": "콜로세움, 트레비 분수, 바티칸"},
-        "🇪🇸 스페인 바르셀로나 (Barcelona)": {"city": "Barcelona", "curr": "EUR", "spots": "사그라다 파밀리아, 구엘 공원"},
+        "🇮🇹 이탈리아 로마 (Rome)": {"city": "Rome", "curr": "EUR", "spots": "콜로세움, 트레비 분수, 바티칸 미술관"},
+        "🇪🇸 스페인 바르셀로나 (Barcelona)": {"city": "Barcelona", "curr": "EUR", "spots": "사그라다 파밀리아, 구엘 공원, 람블라스 거리"},
         "🇹🇭 태국 방콕 (Bangkok)": {"city": "Bangkok", "curr": "THB", "spots": "왓 아룬, 카오산 로드, 아이콘시암"},
-        "🇻🇳 베트남 다낭 (Da Nang)": {"city": "Da Nang", "curr": "VND", "spots": "미케비치, 바나힐 골든브릿지, 호이안 야시장"}
+        "🇻🇳 베트남 다낭 (Da Nang)": {"city": "Da Nang", "curr": "VND", "spots": "미케비치, 바나힐 골든브릿지, 호이안 구시가지"}
     }
 
-    pick = st.selectbox("궁금한 도시를 선택하세요", list(others_dict.keys()))
+    pick = st.selectbox("도시 선택", list(others_dict.keys()))
     t_data = others_dict[pick]
 
     c1, c2 = st.columns(2, gap="large")
     with c1:
-        st.markdown(f"#### 🌤️ {t_data['city']} 실시간 날씨")
+        st.markdown(f"#### 🌤️ {t_data['city']} 날씨")
         w = get_weather_by_city(t_data["city"])
-        render_fluffy_weather_card(t_data["city"], w)
+        render_weather_card(t_data["city"], w)
     with c2:
         st.markdown(f"#### 💱 {t_data['curr']} 환율")
         if EXCHANGERATE_API_KEY:
@@ -553,39 +608,40 @@ elif curr_page == "🥐 기타 국가":
                 k_rate = r["conversion_rate"]
                 st.markdown(f"""
                 <div class="weather-card">
-                    <div class="weather-city">💱 1,000 KRW 기준</div>
+                    <div class="weather-city">💱 1,000 KRW 환산 금액</div>
                     <div class="weather-temp">{1000 * k_rate:,.2f} {t_data['curr']}</div>
-                    <div class="weather-desc">1 KRW = {k_rate:.4f} {t_data['curr']}</div>
+                    <div class="weather-desc-badge">1 KRW = {k_rate:.4f} {t_data['curr']}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
     st.markdown(f"""
     <div class="spot-card">
-        <span class="spot-tag">대표 추천 코스</span>
-        <div class="spot-title" style="margin-top:6px;">📍 {pick} 핵심 코스</div>
-        <div style="font-size:13px; color:#555; margin-top:6px;">{t_data['spots']}</div>
+        <span class="spot-tag">핵심 코스</span>
+        <div class="spot-title" style="margin-top:6px; font-size:16px;">📍 {pick} 추천 코스</div>
+        <div style="font-size:13px; color:#5c4973; margin-top:6px;">{t_data['spots']}</div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("💖 이 도시 코스 플래너에 통째로 담기"):
-        plan_line = f"[{t_data['city']}] {t_data['spots']}"
-        if plan_line not in st.session_state.my_plan:
-            st.session_state.my_plan.append(plan_line)
-            st.success("플래너에 추가되었습니다! ✨")
+    if st.button("➕ 이 도시 코스 전체 담기"):
+        item_str = f"[{t_data['city']}] {t_data['spots']}"
+        if item_str not in st.session_state.my_plan:
+            st.session_state.my_plan.append(item_str)
+            save_plans(st.session_state.my_plan)
+            st.success("플래너에 추가되었습니다.")
 
-# [PAGE 6] 환율 계산기
+# [6] 환율 계산기
 elif curr_page == "🍧 환율 계산기":
-    st.markdown("<h2 style='color:#e06d88;'>🍧 달콤한 실시간 환율 계산기</h2>", unsafe_allow_html=True)
-    st.caption("여행 예산을 뚝딱 계산하고 경비를 똑똑하게 챙겨보세요 ✨")
+    st.markdown("<h2 style='color:#3b2359;'>🍧 실시간 환율 계산기</h2>", unsafe_allow_html=True)
+    st.caption("기준 통화와 환전 금액을 입력하면 실시간 환율로 자동 환산됩니다.")
     st.write("")
 
     currency_list = ["KRW", "USD", "JPY", "CNY", "EUR", "GBP", "THB", "VND", "TWD", "AUD", "CAD"]
     col_c1, col_c2, col_c3 = st.columns([2, 2, 3])
-    with col_c1: base = st.selectbox("보내는 통화", currency_list, index=0)
-    with col_c2: target = st.selectbox("받는 통화", currency_list, index=1)
-    with col_c3: amt = st.number_input("금액 입력", min_value=0.0, value=10000.0, step=1000.0)
+    with col_c1: base = st.selectbox("보내는 통화 (기준)", currency_list, index=0)
+    with col_c2: target = st.selectbox("받는 통화 (변환)", currency_list, index=1)
+    with col_c3: amt = st.number_input("환전 금액", min_value=0.0, value=10000.0, step=1000.0)
 
     if base == target:
-        st.info("기준 통화와 변환 통화가 같습니다 ✨")
+        st.info("기준 통화와 변환 통화가 동일합니다.")
     elif EXCHANGERATE_API_KEY:
         r_info, _ = get_exchange_rate(base, target)
         if r_info and "conversion_rate" in r_info:
@@ -593,8 +649,8 @@ elif curr_page == "🍧 환율 계산기":
             res = amt * c_rate
             st.markdown(f"""
             <div class="weather-card" style="margin-top:20px; text-align:center;">
-                <div class="weather-city" style="justify-content:center;">🎀 변환 결과</div>
-                <div class="weather-temp" style="color:#e06d88; font-size:38px; margin: 10px 0;">{res:,.2f} {target}</div>
-                <div class="weather-desc">{amt:,.0f} {base} · 적용 환율: 1 {base} = {c_rate:.4f} {target}</div>
+                <div class="weather-city" style="justify-content:center;">✈️ 변환 결과</div>
+                <div class="weather-temp" style="color:#6d3fc2; font-size:38px; margin: 10px 0;">{res:,.2f} {target}</div>
+                <div class="weather-desc-badge">{amt:,.0f} {base} · 적용 환율: 1 {base} = {c_rate:.4f} {target}</div>
             </div>
             """, unsafe_allow_html=True)
