@@ -1,8 +1,15 @@
 from bs4 import BeautifulSoup
 import requests
-import pandas as pd
 
-response = requests.get("https://www.google.com")
+url = "https://startcoding.pythonanywhere.com/basic"
 
-html = response.text
-soup = BeautifulSoup(html, "html.parser")
+response = requests.get(
+    url,
+    headers={"User-Agent": "Mozilla/5.0"}
+)
+
+soup = BeautifulSoup(response.text, "html.parser")
+
+# 검색 결과의 설명 텍스트
+for result in soup.select(".VwiC3b"):
+    print(result.text)
