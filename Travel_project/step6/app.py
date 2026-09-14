@@ -3,6 +3,7 @@ import sys
 import json
 import base64
 from pathlib import Path
+import pandas as pd
 import requests
 import streamlit as st
 import streamlit.components.v1 as components
@@ -35,7 +36,7 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------------
-# 2. 로컬 폰트(에이투지체) Base64 로드 & 라벤더 글래스 UI CSS
+# 2. 폰트(에이투지체) 로드 & 라벤더 버블 글래스 CSS
 # -------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -73,65 +74,77 @@ custom_theme_css = f"""
 <style>
 {font_face_css}
 
-/* 전역 폰트 및 라벤더 물빛 배경 */
+/* 전역 라벤더 물빛 배경 */
 html, body, [class*="css"], .stApp {{
     font-family: 'A2Z-Regular', -apple-system, sans-serif !important;
     background: linear-gradient(135deg, #f8f5ff 0%, #f1e9ff 50%, #e9ddfc 100%) !important;
     color: #2b1f3d !important;
 }}
 
-/* 제목 및 강조 텍스트는 SemiBold 적용 */
-h1, h2, h3, h4, h5, .stHeading, .page-title, .spot-title, .weather-temp {{
+/* 제목류 세미볼드 적용 */
+h1, h2, h3, h4, h5, .stHeading, .spot-title, .weather-temp {{
     font-family: 'A2Z-SemiBold', sans-serif !important;
     color: #3b2359 !important;
 }}
 
 /* 사이드바 */
 section[data-testid="stSidebar"] {{
-    background-color: rgba(248, 244, 255, 0.85) !important;
+    background-color: rgba(248, 244, 255, 0.82) !important;
     backdrop-filter: blur(14px);
     border-right: 1.5px solid rgba(215, 196, 245, 0.5);
 }}
 
-/* 라벤더 펄 버튼 */
+/* [중요] 버튼 흰색 박스 버그 박멸 및 맑은 라벤더 캡슐 버튼 */
+section[data-testid="stSidebar"] div.stButton {{
+    margin-bottom: 6px !important;
+}}
 .stButton > button {{
     font-family: 'A2Z-SemiBold', sans-serif !important;
-    background: linear-gradient(135deg, #b99bf5 0%, #9a75e8 100%) !important;
-    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    color: #4a2c7a !important;
+    border: 1.5px solid #dcd0f7 !important;
+    border-radius: 18px !important;
+    padding: 9px 16px !important;
+    box-shadow: 0 4px 12px rgba(181, 155, 230, 0.15) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    width: 100% !important;
+}}
+/* 버튼 내부 컨테이너의 흰색 배경 강제 투명화 */
+.stButton > button * {{
+    background: transparent !important;
+    background-color: transparent !important;
     border: none !important;
-    border-radius: 16px !important;
-    padding: 9px 18px !important;
-    box-shadow: 0 4px 14px rgba(162, 127, 237, 0.35) !important;
-    transition: all 0.2s ease-in-out !important;
-    width: 100%;
+    box-shadow: none !important;
 }}
 .stButton > button:hover {{
+    background: rgba(238, 226, 255, 0.95) !important;
+    border-color: #bfa5f5 !important;
+    color: #29124d !important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(162, 127, 237, 0.5) !important;
+    box-shadow: 0 6px 18px rgba(162, 127, 237, 0.25) !important;
 }}
 
-/* 입력창 & 셀렉트박스 */
+/* 인풋 및 셀렉트박스 */
 div[data-baseweb="input"], div[data-baseweb="select"] {{
     border-radius: 14px !important;
     background-color: rgba(255, 255, 255, 0.85) !important;
     border: 1.5px solid #d4c2f7 !important;
 }}
 
-/* 고대비 날씨 카드 (흰 바탕에서도 또렷함 보장) */
+/* 날씨 카드 */
 .weather-card {{
-    background: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
     border: 1.5px solid #dcd0f7;
     border-radius: 18px;
     padding: 16px 20px;
-    box-shadow: 0 8px 20px rgba(181, 155, 230, 0.2);
+    box-shadow: 0 8px 20px rgba(181, 155, 230, 0.18);
     margin-bottom: 12px;
 }}
 .weather-city {{
     font-family: 'A2Z-SemiBold', sans-serif;
     font-size: 14px;
     color: #6c46a8;
-    margin-bottom: 2px;
 }}
 .weather-temp {{
     font-size: 30px;
@@ -151,12 +164,11 @@ div[data-baseweb="input"], div[data-baseweb="select"] {{
     font-size: 12px;
     color: #554469;
     margin-top: 6px;
-    font-weight: 500;
 }}
 
-/* 플래너 스팟 카드 */
+/* 스팟 카드 */
 .spot-card {{
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.88);
     border: 1.5px solid #ded3f7;
     border-radius: 16px;
     padding: 14px 16px;
@@ -178,7 +190,7 @@ div[data-baseweb="input"], div[data-baseweb="select"] {{
 st.markdown(custom_theme_css, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# 3. 플래너 JSON 로컬 영구 저장 (백엔드 불필요)
+# 3. 플래너 로컬 JSON 영구 보관 (백엔드 불필요)
 # -------------------------------------------------------------
 PLAN_FILE = BASE_DIR / "travel_plans.json"
 
@@ -202,7 +214,45 @@ if "my_plan" not in st.session_state:
     st.session_state.my_plan = load_saved_plans()
 
 # -------------------------------------------------------------
-# 4. API 함수들
+# 4. 현지어 발음 TTS 재생 렌더러
+# -------------------------------------------------------------
+def render_tts_button(text: str, lang_code: str, label: str = "🔊 발음 듣기"):
+    """브라우저 내장 Web Speech API를 활용한 무설치 음성 재생"""
+    html_code = f"""
+    <button onclick="speakText()" style="
+        background: #eedfff;
+        color: #583391;
+        border: 1px solid #d4c2f7;
+        border-radius: 12px;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+    ">
+        {label}
+    </button>
+    <script>
+    function speakText() {{
+        if ('speechSynthesis' in window) {{
+            window.speechSynthesis.cancel();
+            var utterance = new SpeechSynthesisUtterance("{text}");
+            utterance.lang = "{lang_code}";
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }} else {{
+            alert('이 브라우저는 음성 재생을 지원하지 않습니다.');
+        }}
+    }}
+    </script>
+    """
+    components.html(html_code, height=36)
+
+# -------------------------------------------------------------
+# 5. API 통신 함수들
 # -------------------------------------------------------------
 @st.cache_data(ttl=600, show_spinner=False)
 def kakao_search_place(query: str):
@@ -295,7 +345,7 @@ def render_weather_card(title: str, weather_data: dict):
     """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# 5. 카카오 지도 렌더러 (검증 완료된 형태)
+# 6. 카카오 지도 렌더러
 # -------------------------------------------------------------
 def render_kakao_map(lat: float, lon: float, place_name: str = "", nearby_places: list = None):
     if not KAKAO_JS_API_KEY:
@@ -378,7 +428,7 @@ def render_kakao_map(lat: float, lon: float, place_name: str = "", nearby_places
     components.html(html_code, height=500)
 
 # -------------------------------------------------------------
-# 6. 세션 기본값 및 사이드바 (페이지 탭 메뉴)
+# 7. 세션 기본값 및 사이드바 (단정한 라벤더 메뉴 & 플래너 CSV 내보내기)
 # -------------------------------------------------------------
 if "current_page" not in st.session_state:
     st.session_state.current_page = "🍲 한국"
@@ -393,7 +443,7 @@ if "selected_place" not in st.session_state:
     st.session_state.selected_place = preset_defaults["경복궁"]
 
 with st.sidebar:
-    st.markdown("<h2 style='color:#4a2c7a; margin-bottom: 2px;'>✈️ Travel App</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#3b2359; margin-bottom: 2px;'>✈️ Travel App</h2>", unsafe_allow_html=True)
     st.caption("스마트 여행 플래너 & 국가별 가이드")
     st.write("")
 
@@ -415,26 +465,39 @@ with st.sidebar:
 
     st.divider()
 
-    # 영구 저장되는 여행 플래너 보관함
+    # 영구 보관 플래너 보관함 + CSV 다운로드
     st.markdown("##### 📋 내 여행 플래너 보관함")
     if st.session_state.my_plan:
         for idx, item in enumerate(st.session_state.my_plan, 1):
-            st.markdown(f"<div style='font-size:12px; color:#402d57; margin-bottom:4px;'><b>{idx}.</b> {item}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:12px; color:#402d57; margin-bottom:3px;'><b>{idx}.</b> {item}</div>", unsafe_allow_html=True)
         
-        st.write("")
+        # CSV 다운로드 생성
+        df_plan = pd.DataFrame({
+            "순번": range(1, len(st.session_state.my_plan) + 1),
+            "방문지/일정": st.session_state.my_plan
+        })
+        csv_data = df_plan.to_csv(index=False).encode('utf-8-sig')
+
+        st.download_button(
+            label="📥 플래너 CSV 다운로드",
+            data=csv_data,
+            file_name="my_travel_plan.csv",
+            mime="text/csv"
+        )
+
         if st.button("🗑️ 전체 보관함 비우기"):
             st.session_state.my_plan = []
             save_plans([])
             st.rerun()
     else:
-        st.caption("보관된 여행지가 없습니다. 추천 스팟을 추가해보세요.")
+        st.caption("보관된 여행지가 없습니다. 가고 싶은 스팟을 플래너에 담아보세요.")
 
 # -------------------------------------------------------------
-# 7. 메인 화면 로직
+# 8. 메인 화면 로직
 # -------------------------------------------------------------
 curr_page = st.session_state.current_page
 
-# [1] 한국
+# [PAGE 1] 한국
 if curr_page == "🍲 한국":
     st.markdown("<h2 style='color:#3b2359;'>🍲 국내 여행 플래너</h2>", unsafe_allow_html=True)
     st.caption("실시간 날씨와 지도로 나만의 국내 여행 코스를 계획하세요.")
@@ -489,8 +552,9 @@ if curr_page == "🍲 한국":
             if place.get("place_url"):
                 st.link_button("카카오맵 상세 ↗", place["place_url"])
 
-        cat_picked = st.radio("주변 탐색", ["선택 안 함", "🍴 맛집", "☕ 카페", "🏪 편의점"], horizontal=True)
-        cat_map = {"🍴 맛집": "FD6", "☕ 카페": "CE7", "🏪 편의점": "CS2"}
+        # 카페 이모지 변경: 🧋 (버블티) 또는 🍰 (케이크)
+        cat_picked = st.radio("주변 탐색", ["선택 안 함", "🍴 맛집", "🧋 디저트/카페", "🏪 편의점"], horizontal=True)
+        cat_map = {"🍴 맛집": "FD6", "🧋 디저트/카페": "CE7", "🏪 편의점": "CS2"}
         nearby = []
         if cat_picked in cat_map:
             nearby = kakao_search_category(cat_map[cat_picked], lat, lon)
@@ -505,34 +569,52 @@ if curr_page == "🍲 한국":
         st.markdown("#### 🗺️ 카카오 지도")
         render_kakao_map(lat, lon, place_name=name, nearby_places=nearby)
 
-# [2, 3, 4] 일본, 중국, 미국
+# [PAGE 2, 3, 4] 일본, 중국, 미국
 elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
     country_data = {
         "🍣 일본": {
-            "title": "일본 여행 플래너 (Japan)",
-            "city": "Tokyo", "curr": "JPY",
+            "title": "일본 여행 플래너 (Japan)", "city": "Tokyo", "curr": "JPY", "lang": "ja-JP",
             "spots": [
                 {"name": "도쿄 시부야 스카이", "city": "Tokyo", "tag": "전망대", "desc": "도쿄 시내를 360도로 조망하는 루프탑 전망대"},
                 {"name": "교토 아라시야마 대나무숲", "city": "Kyoto", "tag": "자연", "desc": "신비로운 청량감을 주는 치쿠린 산책로"},
                 {"name": "오사카 도톤보리", "city": "Osaka", "tag": "미식거리", "desc": "화려한 간판과 맛집이 모여있는 중심가"}
+            ],
+            "phrases": [
+                {"ko": "안녕하세요", "native": "こんにちは", "pron": "곤니치와"},
+                {"ko": "이거 얼마인가요?", "native": "これはいくらですか？", "pron": "고레와 이쿠라데스카?"},
+                {"ko": "체크인 부탁드립니다", "native": "チェックインをお願いします", "pron": "체쿠인오 오네가이시마스"},
+                {"ko": "추천 메뉴가 무엇인가요?", "native": "おすすめは何ですか？", "pron": "오스스메와 난데스카?"},
+                {"ko": "화장실이 어디예요?", "native": "トイレはどこですか？", "pron": "토이레와 도코데스카?"}
             ]
         },
         "🥟 중국": {
-            "title": "중국 여행 플래너 (China)",
-            "city": "Beijing", "curr": "CNY",
+            "title": "중국 여행 플래너 (China)", "city": "Beijing", "curr": "CNY", "lang": "zh-CN",
             "spots": [
                 {"name": "베이징 자금성", "city": "Beijing", "tag": "역사유적", "desc": "황제의 역사가 깃든 세계 최대 규모의 궁궐"},
                 {"name": "상하이 와이탄", "city": "Shanghai", "tag": "야경명소", "desc": "황푸강변 근대 건축과 마천루 파노라마"},
                 {"name": "청두 판다 생태기지", "city": "Chengdu", "tag": "생태공원", "desc": "귀여운 자이언트 판다 보호 연구 센터"}
+            ],
+            "phrases": [
+                {"ko": "안녕하세요", "native": "你好", "pron": "니하오"},
+                {"ko": "얼마인가요?", "native": "多少钱？", "pron": "뚜어샤오 치엔?"},
+                {"ko": "고수 빼주세요", "native": "不要香菜", "pron": "부야오 시앙차이"},
+                {"ko": "계산서 주세요", "native": "买单", "pron": "마이단"},
+                {"ko": "감사합니다", "native": "谢谢", "pron": "씨에씨에"}
             ]
         },
         "🍔 미국": {
-            "title": "미국 여행 플래너 (USA)",
-            "city": "New York", "curr": "USD",
+            "title": "미국 여행 플래너 (USA)", "city": "New York", "curr": "USD", "lang": "en-US",
             "spots": [
                 {"name": "뉴욕 센트럴 파크", "city": "New York", "tag": "도심공원", "desc": "도심 한가운데에서 누리는 여유로운 산책"},
                 {"name": "LA 그리피스 천문대", "city": "Los Angeles", "tag": "일몰/야경", "desc": "LA 시내와 할리우드 사인을 조망하는 명소"},
                 {"name": "샌프란시스코 금문교", "city": "San Francisco", "tag": "랜드마크", "desc": "태평양과 만을 가로지르는 붉은 현수교"}
+            ],
+            "phrases": [
+                {"ko": "체크인하고 싶습니다", "native": "I'd like to check in, please.", "pron": "아이드 라이크 투 체크인 플리즈"},
+                {"ko": "추천 메뉴가 있나요?", "native": "Do you have any recommendations?", "pron": "두 유 해브 애니 레커멘데이션스?"},
+                {"ko": "계산서 부탁드립니다", "native": "Check, please.", "pron": "체크, 플리즈"},
+                {"ko": "가장 가까운 지하철역이 어디죠?", "native": "Where is the nearest subway station?", "pron": "웨어 이즈 더 니어리스트 서브웨이 스테이션?"},
+                {"ko": "사진 한 장 찍어주실 수 있나요?", "native": "Could you take a picture for me?", "pron": "쿠쥬 테이크 어 픽쳐 포 미?"}
             ]
         }
     }
@@ -560,6 +642,7 @@ elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
                 </div>
                 """, unsafe_allow_html=True)
 
+    # 1. 추천 명소 섹션
     st.markdown("### ✈️ 추천 여행 명소")
     cols = st.columns(3)
     for i, s in enumerate(info["spots"]):
@@ -579,7 +662,25 @@ elif curr_page in ["🍣 일본", "🥟 중국", "🍔 미국"]:
                     save_plans(st.session_state.my_plan)
                     st.success(f"'{s['name']}' 저장 완료")
 
-# [5] 기타 국가
+    st.divider()
+
+    # 2. 필수 현지어 생존 회화 & TTS 오디오 발음 듣기
+    st.markdown("### 🗣️ 여행지 필수 생존 회화 (현지어 오디오 발음)")
+    st.caption("버튼을 누르면 실제 현지어 음성(TTS)으로 자연스럽게 들려줍니다.")
+    
+    ph_cols = st.columns(len(info["phrases"]))
+    for idx, ph in enumerate(info["phrases"]):
+        with ph_cols[idx]:
+            st.markdown(f"""
+            <div class="spot-card" style="min-height: 140px;">
+                <div style="font-size:11px; color:#6b46a8; font-weight:bold;">{ph['ko']}</div>
+                <div style="font-size:15px; font-weight:bold; color:#2c1b42; margin: 4px 0;">{ph['native']}</div>
+                <div style="font-size:11px; color:#78668f;">[{ph['pron']}]</div>
+            </div>
+            """, unsafe_allow_html=True)
+            render_tts_button(ph["native"], info["lang"], label="🔊 발음 듣기")
+
+# [PAGE 5] 기타 국가
 elif curr_page == "🥐 기타 국가":
     st.markdown("<h2 style='color:#3b2359;'>🥐 전 세계 주요 도시 플래너 (Others)</h2>", unsafe_allow_html=True)
     st.write("")
@@ -628,10 +729,10 @@ elif curr_page == "🥐 기타 국가":
             save_plans(st.session_state.my_plan)
             st.success("플래너에 추가되었습니다.")
 
-# [6] 환율 계산기
+# [PAGE 6] 환율 계산기 & 스마트 일정 빌더
 elif curr_page == "🍧 환율 계산기":
-    st.markdown("<h2 style='color:#3b2359;'>🍧 실시간 환율 계산기</h2>", unsafe_allow_html=True)
-    st.caption("기준 통화와 환전 금액을 입력하면 실시간 환율로 자동 환산됩니다.")
+    st.markdown("<h2 style='color:#3b2359;'>🍧 실시간 환율 & 스마트 일정 빌더</h2>", unsafe_allow_html=True)
+    st.caption("환율 계산과 함께 내가 담은 장소들로 맞춤 하루 여행 일정을 자동으로 짜보세요.")
     st.write("")
 
     currency_list = ["KRW", "USD", "JPY", "CNY", "EUR", "GBP", "THB", "VND", "TWD", "AUD", "CAD"]
@@ -654,3 +755,20 @@ elif curr_page == "🍧 환율 계산기":
                 <div class="weather-desc-badge">{amt:,.0f} {base} · 적용 환율: 1 {base} = {c_rate:.4f} {target}</div>
             </div>
             """, unsafe_allow_html=True)
+
+    st.divider()
+
+    # 스마트 일정표 생성기 (플래너 일정 자동 큐레이션)
+    st.markdown("### 🗓️ 내 플래너 맞춤형 1Day 코스 자동 빌더")
+    if len(st.session_state.my_plan) >= 2:
+        if st.button("✨ 담긴 장소로 최적 여행 동선 짜기"):
+            times = ["오전 (10:00)", "점심 & 휴식 (12:30)", "오후 (15:00)", "저녁 & 야경 (18:30)", "나이트 (20:30)"]
+            schedule_data = []
+            for i, p in enumerate(st.session_state.my_plan[:5]):
+                schedule_data.append({"시간대": times[i], "추천 일정": p})
+            
+            st.markdown("#### 🎈 완성된 하루 추천 코스")
+            df_sched = pd.DataFrame(schedule_data)
+            st.table(df_sched)
+    else:
+        st.info("💡 사이드바나 각 국가 페이지에서 여행지를 2곳 이상 담으시면 맞춤 일정표를 자동으로 생성해 드립니다!")
