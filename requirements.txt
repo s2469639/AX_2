@@ -8,3 +8,4 @@ openai
 folium
 streamlit-folium
 pydeck
+BeautifulSoup

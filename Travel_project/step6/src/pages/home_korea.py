@@ -3,27 +3,31 @@ import sys
 from pathlib import Path
 import streamlit as st
 
-# 모듈 경로 보정
+# 1. 파이썬 모듈 검색 경로(sys.path) 안전 등록 (배포 환경 ModuleNotFoundError 방지)
 CURRENT_FILE = Path(__file__).resolve()
-STEP6_DIR = CURRENT_FILE.parent.parent.parent
+# home_korea.py -> pages -> src -> step6 (프로젝트 루트)
+STEP6_DIR = CURRENT_FILE.parents[2]
+
 if str(STEP6_DIR) not in sys.path:
     sys.path.insert(0, str(STEP6_DIR))
 
+# 모듈 Import
 from src.api.weather import get_weather
 from src.api.kakao import search_places_kakao, search_category_kakao
 from src.components.kakao_map import render_kakao_map
 
+# 2. 페이지 상단 헤더
 st.title("🇰🇷 대한민국 여행 센터 (Home)")
 st.link_button("🌐 대한민국 구석구석 (한국관광공사 공식)", "https://korean.visitkorea.or.kr")
 st.write("")
 
-# 1. 상단 날씨 섹션
+# 3. 상단 실시간 날씨 섹션
 st.markdown("#### 🌤️ 국내 주요 거점 실시간 날씨")
 w1, w2, w3 = st.columns(3)
 
 def display_weather_metric(col, city_name, data):
     with col:
-        if data and "temp" in data:
+        if data and isinstance(data, dict) and "temp" in data:
             temp = data.get("temp", "-")
             weather_desc = data.get("description", "")
             humidity = data.get("humidity", "-")
@@ -38,7 +42,7 @@ display_weather_metric(w3, "제주 (Jeju)", get_weather("Jeju"))
 
 st.divider()
 
-# 2. 지도 및 장소 탐색
+# 4. 스마트 장소 탐색 및 지도 섹션
 st.markdown("#### 🗺️ 스마트 장소 탐색 및 지도")
 
 preset_spots = {
@@ -109,9 +113,9 @@ with col_left:
 with col_right:
     st.subheader("🗺️ 실시간 지도 뷰")
     
-    # render_kakao_map 함수 호출 (Folium 기반 교체 시 js_key 불필요)
     kakao_js_key = os.getenv("MAP_API_KEY", "")
     
+    # kakao_map.py 내부 구현(Folium 또는 Kakao JS)에 맞게 지도 호출
     render_kakao_map(
         js_key=kakao_js_key,
         lat=target_lat,
