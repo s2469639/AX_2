@@ -6,14 +6,16 @@ import requests
 import streamlit as st
 import streamlit.components.v1 as components
 
-# 1. 실행 환경 경로 보정 (모듈 임포트 실패 방지)
+# =========================================================
+# 1. 실행 환경 경로 보정
+# =========================================================
 CURRENT_FILE = Path(__file__).resolve()
 STEP6_DIR = CURRENT_FILE.parent.parent.parent
 if str(STEP6_DIR) not in sys.path:
     sys.path.insert(0, str(STEP6_DIR))
 
 # =========================================================
-# 2. API 통신 함수 (외부 파일 의존 없이 안전하게 내장)
+# 2. API 통신 함수
 # =========================================================
 def get_weather(city_name: str):
     """OpenWeather 실시간 날씨 API 조회"""
@@ -85,13 +87,9 @@ def search_category_kakao(cat_code: str, lat: float, lng: float, radius: int = 1
     return []
 
 # =========================================================
-# 3. 진짜 카카오 지도 렌더러 (정석 components.html 사용)
+# 3. 카카오 지도 렌더러 (document.write 가로채기 적용)
 # =========================================================
 def render_kakao_map(js_key: str, lat: float, lng: float, name: str, addr: str, places: list):
-    """
-    정석 components.html과 HTTPS 승격 메타 태그를 적용하여
-    Streamlit Cloud 배포 환경에서도 차단 없이 카카오 지도를 출력합니다.
-    """
     places_json = json.dumps(places, ensure_ascii=False)
 
     html_code = f"""<!DOCTYPE html>
@@ -100,7 +98,6 @@ def render_kakao_map(js_key: str, lat: float, lng: float, name: str, addr: str, 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="always">
-    <!-- 핵심: iframe 내부에서 발생하는 모든 http 호출을 https로 자동 승격하여 차단 방지 -->
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <style>
         * {{ box-sizing: border-box; }}
@@ -110,12 +107,20 @@ def render_kakao_map(js_key: str, lat: float, lng: float, name: str, addr: str, 
 </head>
 <body>
     <div id="map"></div>
+
     <script>
-        var script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey={js_key}&autoload=false';
-        
-        script.onload = function() {{
+        // 카카오 SDK 내부의 http:// document.write 호출을 https://로 강제 치환
+        (function() {{
+            var nativeWrite = document.write.bind(document);
+            document.write = function(content) {{
+                if (typeof content === 'string') {{
+                    content = content.split('http://').join('https://');
+                }}
+                nativeWrite(content);
+            }};
+        }})();
+
+        function initKakaoMap() {{
             kakao.maps.load(function() {{
                 var container = document.getElementById('map');
                 var center = new kakao.maps.LatLng({lat}, {lng});
@@ -124,7 +129,7 @@ def render_kakao_map(js_key: str, lat: float, lng: float, name: str, addr: str, 
                 map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
                 map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
 
-                // 1. 기준 중심 장소 마커 및 정보창
+                // 1. 메인 중심지 마커
                 var mainMarker = new kakao.maps.Marker({{ position: center, map: map }});
                 var mainIw = new kakao.maps.InfoWindow({{
                     position: center,
@@ -163,17 +168,20 @@ def render_kakao_map(js_key: str, lat: float, lng: float, name: str, addr: str, 
                     map.setBounds(bounds);
                 }}
             }});
-        }};
+        }}
+
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey={js_key}&autoload=false';
+        script.onload = initKakaoMap;
         document.head.appendChild(script);
     </script>
 </body>
 </html>"""
-    
-    # st.iframe 대신 정식 Streamlit 컴포넌트인 components.html 사용
     components.html(html_code, height=600)
 
 # =========================================================
-# 4. Streamlit 메인 화면 UI 구성
+# 4. Streamlit 화면 UI 구성
 # =========================================================
 st.title("🇰🇷 대한민국 여행 센터 (Home)")
 st.link_button("🌐 대한민국 구석구석 (한국관광공사 공식)", "https://korean.visitkorea.or.kr")
@@ -212,7 +220,6 @@ preset_spots = {
 
 col_left, col_right = st.columns([5, 7], gap="medium")
 
-# --- 좌측: 검색 및 필터 패널 ---
 with col_left:
     st.subheader("🔍 장소 탐색")
     user_query = st.text_input("직접 검색", placeholder="예: 강남역, 성수동 맛집 입력 후 Enter")
@@ -224,7 +231,6 @@ with col_left:
     target_addr = preset_spots[preset_choice]["address"]
     target_url = preset_spots[preset_choice]["url"]
 
-    # 키워드 검색 실행
     if user_query.strip():
         search_res = search_places_kakao(user_query.strip())
         if search_res:
@@ -237,7 +243,6 @@ with col_left:
         else:
             st.warning("검색 결과가 없어 기본 선택 장소를 유지합니다.")
 
-    # 선택된 장소 요약 카드
     with st.container(border=True):
         st.caption("선택된 중심 장소")
         st.markdown(f"### 📍 {target_name}")
@@ -245,7 +250,6 @@ with col_left:
         if target_url:
             st.link_button("카카오맵 상세 정보 보기 ↗", target_url)
 
-    # 카테고리 필터
     selected_cat = st.radio(
         "주변 편의시설 필터링 (반경 1.5km)",
         ["선택 안 함", "🍴 식당 (맛집)", "☕ 카페", "🏪 편의점"],
@@ -257,7 +261,6 @@ with col_left:
     if selected_cat in cat_map:
         nearby_list = search_category_kakao(cat_map[selected_cat], target_lat, target_lng)
 
-    # 주변 목록 리스트
     if nearby_list:
         st.markdown(f"**주변 시설 결과 ({len(nearby_list)}곳)**")
         with st.container(height=260):
@@ -270,7 +273,6 @@ with col_left:
                     if p.get("url"):
                         st.link_button("카카오맵 열기", p["url"])
 
-# --- 우측: 진짜 카카오 지도 뷰 ---
 with col_right:
     st.subheader("🗺️ 카카오 지도 뷰")
     kakao_js_key = os.getenv("MAP_API_KEY", "")
