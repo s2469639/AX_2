@@ -405,7 +405,7 @@ const services = [
     ],
     "desc": "말로 설명하면 화면 시안을 여러 개 뽑아 비교하게 해 주는 무료 AI",
     "url": "https://stitch.withgoogle.com/",
-    "priceType": "freemium",
+    "priceType": "free",
     "priceDetail": [
       "Google Labs 베타로 유료 플랜 없음 (2026년 4월 기준)",
       "하루 디자인 크레딧 400 + 리디자인 15",
@@ -841,7 +841,7 @@ const services = [
     ],
     "desc": "네이버 하이퍼클로바 기반으로 한국어 구어체까지 정확히 받아적는 서비스",
     "url": "https://clovanote.naver.com/",
-    "priceType": "freemium",
+    "priceType": "free",
     "priceDetail": [
       "매월 300분 무료 (데이터 수집 동의 시 최대 600분)"
     ],
