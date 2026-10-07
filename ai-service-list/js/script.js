@@ -37,7 +37,8 @@ function makeLogo(s, size) {
   img.alt = '';
   img.loading = 'lazy';
   img.decoding = 'async';
-  img.src = `https://www.google.com/s2/favicons?domain=${domainOf(s.url)}&sz=${size || 128}`;
+  // 직접 저장한 로고(s.logo)가 있으면 우선 사용, 없으면 파비콘 서비스
+  img.src = s.logo || `https://www.google.com/s2/favicons?domain=${domainOf(s.url)}&sz=${size || 128}`;
   img.addEventListener('error', () => {
     img.remove();
     wrap.classList.add('fallback');
@@ -45,7 +46,7 @@ function makeLogo(s, size) {
   });
   img.addEventListener('load', () => {
     // 아주 작은 기본 아이콘(지구본)이 오면 첫 글자로 대체
-    if (img.naturalWidth && img.naturalWidth < 24) img.dispatchEvent(new Event('error'));
+    if (!s.logo && img.naturalWidth && img.naturalWidth < 24) img.dispatchEvent(new Event('error'));
   });
   wrap.appendChild(img);
   return wrap;

@@ -145,6 +145,7 @@ const services = [
       "한국어 화면, 학술 자료 중심"
     ],
     "useCase": "레포트 참고문헌 찾기",
+    "logo": "img/logos/liner.png",
     "id": 7
   },
   {
@@ -850,6 +851,7 @@ const services = [
       "네이버 계정 연동 및 모바일-PC 동기화 편리"
     ],
     "useCase": "오프라인 미팅 녹음 및 전사, 인터뷰 정리, 회의 시간대별 핵심 요약",
+    "logo": "img/logos/clovanote.png",
     "id": 42
   },
   {
