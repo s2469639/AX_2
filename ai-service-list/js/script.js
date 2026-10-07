@@ -171,9 +171,35 @@ function syncActive() {
   if (active) active.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
 }
 
+// 마우스로 잡아끌어 분야 칩 가로 스크롤 (터치는 기본 스와이프 사용)
+function enableDragScroll(box) {
+  let down = false, moved = false, startX = 0, startLeft = 0;
+  box.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    down = true; moved = false;
+    startX = e.clientX; startLeft = box.scrollLeft;
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!down) return;
+    const dx = e.clientX - startX;
+    if (!moved && Math.abs(dx) > 5) { moved = true; box.classList.add('dragging'); }
+    if (moved) box.scrollLeft = startLeft - dx;
+  });
+  window.addEventListener('pointerup', () => {
+    if (!down) return;
+    down = false;
+    box.classList.remove('dragging');
+  });
+  // 드래그 직후에는 칩 클릭이 일어나지 않도록 막음
+  box.addEventListener('click', (e) => {
+    if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
+  }, true);
+}
+
 function init() {
   $('stats').textContent = `${services.length}개 서비스 · ${CATEGORIES.length}개 분야`;
   buildFilters();
+  enableDragScroll($('categories'));
   render();
 
   $('search').addEventListener('input', (e) => {
