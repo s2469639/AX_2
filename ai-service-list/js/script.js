@@ -9,7 +9,13 @@ const PRICE = {
 const HUES = [28, 215, 262, 330, 8, 190, 150, 100, 340, 45, 175, 285, 235, 20];
 const hueOf = (cat) => HUES[CATEGORIES.indexOf(cat) % HUES.length];
 
-const state = { cat: '전체', price: 'all', q: '' };
+// 보기 전환 아이콘: 큰 네모 하나(카드형) / 작은 네모 여러 개(로고형)
+const VIEWS = [
+  ['card', '카드형', '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2"/></svg>'],
+  ['logo', '로고형', '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor"><rect x="3.5" y="3.5" width="5" height="5" rx="1.4"/><rect x="9.5" y="3.5" width="5" height="5" rx="1.4"/><rect x="15.5" y="3.5" width="5" height="5" rx="1.4"/><rect x="3.5" y="9.5" width="5" height="5" rx="1.4"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.4"/><rect x="15.5" y="9.5" width="5" height="5" rx="1.4"/><rect x="3.5" y="15.5" width="5" height="5" rx="1.4"/><rect x="9.5" y="15.5" width="5" height="5" rx="1.4"/><rect x="15.5" y="15.5" width="5" height="5" rx="1.4"/></svg>'],
+];
+const state = { cat: '전체', price: 'all', q: '', view: 'card' };
+try { const v = localStorage.getItem('view'); if (VIEWS.some(([k]) => k === v)) state.view = v; } catch (e) { /* 저장 불가 시 기본값 */ }
 
 const $ = (id) => document.getElementById(id);
 const grid = $('grid');
@@ -60,11 +66,10 @@ function matches(s) {
   return true;
 }
 
-function makeCard(s, i) {
-  const hue = hueOf(s.categories[0]);
+function makeCard(s, i, hueCat) {
+  const hue = hueOf(hueCat || s.categories[0]);
   const card = el('article', 'card');
   card.style.setProperty('--h', hue);
-  card.style.setProperty('--i', Math.min(i, 14));
   card.tabIndex = 0;
   card.setAttribute('role', 'button');
   card.setAttribute('aria-label', `${s.name} 상세 보기`);
@@ -77,7 +82,11 @@ function makeCard(s, i) {
   link.title = `${s.name} 공식 사이트 열기`;
   link.setAttribute('aria-label', `${s.name} 공식 사이트 열기`);
   link.appendChild(makeLogo(s));
-  link.addEventListener('click', (e) => e.stopPropagation());
+  link.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // 로고 보기에서는 로고를 누르면 상세 모달이 열림 (공식 사이트는 모달에서)
+    if (state.view === 'logo') { e.preventDefault(); openModal(s, card); }
+  });
   top.append(link, badge(s.priceType));
 
   const name = el('h3', 'card-name', s.name);
@@ -97,11 +106,52 @@ function makeCard(s, i) {
   return card;
 }
 
+// 스크롤 등장: 화면에 들어온 카드를 순서대로 띄움
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const revealer = ('IntersectionObserver' in window && !reduceMotion)
+  ? new IntersectionObserver((entries) => {
+      entries.filter((e) => e.isIntersecting).forEach((e, k) => {
+        const card = e.target;
+        revealer.unobserve(card);
+        card.style.transitionDelay = `${k * 55}ms`;
+        card.classList.add('in');
+        setTimeout(() => { card.style.transitionDelay = ''; }, 900);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 })
+  : null;
+
+let renderTimer = 0;
 function render() {
   const list = services.filter(matches);
-  grid.replaceChildren(...list.map(makeCard));
-  $('empty').hidden = list.length > 0;
-  $('count').textContent = `${list.length}개 서비스`;
+  const paint = () => {
+    grid.classList.remove('out');
+    if (state.view === 'logo') {
+      // 로고형: 분야별 박스로 묶어서 보여줌 (여러 분야에 속한 서비스는 각 박스에 나옴)
+      const cats = state.cat === '전체' ? CATEGORIES : [state.cat];
+      const groups = cats.map((cat) => {
+        const items = list.filter((x) => x.categories.includes(cat));
+        if (!items.length) return null;
+        const box = el('section', 'group');
+        box.style.setProperty('--h', hueOf(cat));
+        const title = el('h2', 'group-title', cat);
+        title.appendChild(el('span', null, String(items.length)));
+        const inner = el('div', 'group-grid');
+        inner.append(...items.map((x, k) => makeCard(x, k, cat)));
+        box.append(title, inner);
+        return box;
+      }).filter(Boolean);
+      grid.replaceChildren(...groups);
+    } else {
+      grid.replaceChildren(...list.map((x, k) => makeCard(x, k)));
+    }
+    grid.querySelectorAll('.card').forEach((c) => (revealer ? revealer.observe(c) : c.classList.add('in')));
+    $('empty').hidden = list.length > 0;
+    $('count').textContent = `${list.length}개 서비스`;
+  };
+  clearTimeout(renderTimer);
+  if (reduceMotion || !grid.children.length) return paint();
+  grid.classList.add('out'); // 기존 카드가 먼저 사라진 뒤 새 카드가 등장
+  renderTimer = setTimeout(paint, 160);
 }
 
 function fillList(ul, items) {
@@ -134,7 +184,32 @@ function closeModal() {
   if (lastFocus && lastFocus.focus) lastFocus.focus();
 }
 
+function setView(v) {
+  state.view = v;
+  grid.dataset.view = v;
+  try { localStorage.setItem('view', v); } catch (e) { /* 무시 */ }
+  document.querySelectorAll('#views button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.view === v));
+}
+
 function buildFilters() {
+  const vbox = $('views');
+  VIEWS.forEach(([k, label, icon], idx) => {
+    const b = el('button');
+    b.innerHTML = icon; // 위에서 정의한 고정 SVG
+    b.type = 'button';
+    b.dataset.view = k;
+    b.title = label;
+    b.setAttribute('aria-label', label);
+    if (idx) vbox.appendChild(el('span', 'divider'));
+    b.addEventListener('click', () => {
+      if (state.view === k) return;
+      setView(k);
+      render();
+    });
+    vbox.appendChild(b);
+  });
+  setView(state.view);
+
   const box = $('categories');
   ['전체', ...CATEGORIES].forEach((c) => {
     const b = el('button', 'chip', c);
@@ -171,9 +246,35 @@ function syncActive() {
   if (active) active.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
 }
 
+// 마우스로 잡아끌어 분야 칩 가로 스크롤 (터치는 기본 스와이프 사용)
+function enableDragScroll(box) {
+  let down = false, moved = false, startX = 0, startLeft = 0;
+  box.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    down = true; moved = false;
+    startX = e.clientX; startLeft = box.scrollLeft;
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!down) return;
+    const dx = e.clientX - startX;
+    if (!moved && Math.abs(dx) > 5) { moved = true; box.classList.add('dragging'); }
+    if (moved) box.scrollLeft = startLeft - dx;
+  });
+  window.addEventListener('pointerup', () => {
+    if (!down) return;
+    down = false;
+    box.classList.remove('dragging');
+  });
+  // 드래그 직후에는 칩 클릭이 일어나지 않도록 막음
+  box.addEventListener('click', (e) => {
+    if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
+  }, true);
+}
+
 function init() {
   $('stats').textContent = `${services.length}개 서비스 · ${CATEGORIES.length}개 분야`;
   buildFilters();
+  enableDragScroll($('categories'));
   render();
 
   $('search').addEventListener('input', (e) => {
