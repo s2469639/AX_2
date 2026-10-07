@@ -165,7 +165,11 @@ main { max-width: 1160px; margin: 0 auto; padding: 28px 20px 60px; }
 .group-title::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: hsl(var(--h) 75% 60%); }
 .group-title span { padding: 1px 9px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; }
 .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
-[data-view='logo'] .card { background: rgba(255, 255, 255, 0.85); }
+[data-view='logo'] .card {
+  background: linear-gradient(160deg, hsl(var(--h) 90% 93% / 0.95), hsl(calc(var(--h) + 45) 85% 86% / 0.95));
+  border-color: hsl(var(--h) 40% 80%);
+}
+[data-view='logo'] .card.in:hover { border-color: var(--ink); }
 [data-view='logo'] .card { align-items: center; text-align: center; padding: 16px 8px 12px; gap: 8px; border-radius: 18px; }
 [data-view='logo'] .card-top { margin: 0; }
 [data-view='logo'] .logo { width: 56px; height: 56px; }
