@@ -841,7 +841,7 @@ const services = [
     ],
     "desc": "네이버 하이퍼클로바 기반으로 한국어 구어체까지 정확히 받아적는 서비스",
     "url": "https://clovanote.naver.com/",
-    "priceType": "freemium",
+    "priceType": "free",
     "priceDetail": [
       "매월 300분 무료 (데이터 수집 동의 시 최대 600분)"
     ],
