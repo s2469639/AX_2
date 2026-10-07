@@ -9,7 +9,11 @@ const PRICE = {
 const HUES = [28, 215, 262, 330, 8, 190, 150, 100, 340, 45, 175, 285, 235, 20];
 const hueOf = (cat) => HUES[CATEGORIES.indexOf(cat) % HUES.length];
 
-const VIEWS = [['card', '카드'], ['logo', '로고']];
+// 보기 전환 아이콘: 큰 네모 하나(카드형) / 작은 네모 여러 개(로고형)
+const VIEWS = [
+  ['card', '카드형', '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2"/></svg>'],
+  ['logo', '로고형', '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor"><rect x="3.5" y="3.5" width="5" height="5" rx="1.4"/><rect x="9.5" y="3.5" width="5" height="5" rx="1.4"/><rect x="15.5" y="3.5" width="5" height="5" rx="1.4"/><rect x="3.5" y="9.5" width="5" height="5" rx="1.4"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.4"/><rect x="15.5" y="9.5" width="5" height="5" rx="1.4"/><rect x="3.5" y="15.5" width="5" height="5" rx="1.4"/><rect x="9.5" y="15.5" width="5" height="5" rx="1.4"/><rect x="15.5" y="15.5" width="5" height="5" rx="1.4"/></svg>'],
+];
 const state = { cat: '전체', price: 'all', q: '', view: 'card' };
 try { const v = localStorage.getItem('view'); if (VIEWS.some(([k]) => k === v)) state.view = v; } catch (e) { /* 저장 불가 시 기본값 */ }
 
@@ -62,8 +66,8 @@ function matches(s) {
   return true;
 }
 
-function makeCard(s, i) {
-  const hue = hueOf(s.categories[0]);
+function makeCard(s, i, hueCat) {
+  const hue = hueOf(hueCat || s.categories[0]);
   const card = el('article', 'card');
   card.style.setProperty('--h', hue);
   card.tabIndex = 0;
@@ -121,9 +125,26 @@ function render() {
   const list = services.filter(matches);
   const paint = () => {
     grid.classList.remove('out');
-    const cards = list.map(makeCard);
-    grid.replaceChildren(...cards);
-    cards.forEach((c) => (revealer ? revealer.observe(c) : c.classList.add('in')));
+    if (state.view === 'logo') {
+      // 로고형: 분야별 박스로 묶어서 보여줌 (여러 분야에 속한 서비스는 각 박스에 나옴)
+      const cats = state.cat === '전체' ? CATEGORIES : [state.cat];
+      const groups = cats.map((cat) => {
+        const items = list.filter((x) => x.categories.includes(cat));
+        if (!items.length) return null;
+        const box = el('section', 'group');
+        box.style.setProperty('--h', hueOf(cat));
+        const title = el('h2', 'group-title', cat);
+        title.appendChild(el('span', null, String(items.length)));
+        const inner = el('div', 'group-grid');
+        inner.append(...items.map((x, k) => makeCard(x, k, cat)));
+        box.append(title, inner);
+        return box;
+      }).filter(Boolean);
+      grid.replaceChildren(...groups);
+    } else {
+      grid.replaceChildren(...list.map((x, k) => makeCard(x, k)));
+    }
+    grid.querySelectorAll('.card').forEach((c) => (revealer ? revealer.observe(c) : c.classList.add('in')));
     $('empty').hidden = list.length > 0;
     $('count').textContent = `${list.length}개 서비스`;
   };
@@ -172,10 +193,14 @@ function setView(v) {
 
 function buildFilters() {
   const vbox = $('views');
-  VIEWS.forEach(([k, label]) => {
-    const b = el('button', null, label);
+  VIEWS.forEach(([k, label, icon], idx) => {
+    const b = el('button');
+    b.innerHTML = icon; // 위에서 정의한 고정 SVG
     b.type = 'button';
     b.dataset.view = k;
+    b.title = label;
+    b.setAttribute('aria-label', label);
+    if (idx) vbox.appendChild(el('span', 'divider'));
     b.addEventListener('click', () => {
       if (state.view === k) return;
       setView(k);

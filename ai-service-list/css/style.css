@@ -104,7 +104,13 @@ a { color: inherit; }
 .seg button { border: 0; background: transparent; padding: 6px 12px; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--ink-2); }
 .seg button[aria-pressed='true'] { background: #fff; color: var(--ink); font-weight: 700; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); }
 .count { flex: none; font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.views { flex: none; }
+.row { display: flex; gap: 10px; align-items: center; }
+.row .search { flex: 1; min-width: 0; }
+.views { flex: none; display: inline-flex; align-items: center; height: 48px; padding: 0 5px; border: 1.5px solid var(--ink); border-radius: 14px; background: #fff; }
+.views button { display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 10px; background: transparent; color: var(--ink-3); cursor: pointer; transition: background .2s, color .2s; }
+.views button:hover { color: var(--ink); }
+.views button[aria-pressed='true'] { background: var(--ink); color: #fff; }
+.divider { width: 1.5px; height: 22px; margin: 0 4px; background: var(--ink); opacity: .25; border-radius: 2px; }
 
 /* 카드 */
 main { max-width: 1160px; margin: 0 auto; padding: 28px 20px 60px; }
@@ -156,7 +162,16 @@ main { max-width: 1160px; margin: 0 auto; padding: 28px 20px 60px; }
 .card-use span { display: inline-block; margin-right: 8px; padding: 1px 8px; border-radius: 6px; background: var(--ink); color: #fff; font-size: 11px; font-weight: 700; }
 
 /* 보기 방식: 로고만 (아이콘 지도) */
-.grid[data-view='logo'] { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.grid[data-view='logo'] { display: flex; flex-direction: column; gap: 16px; }
+.group {
+  --h: 220; padding: 18px; border-radius: 26px; border: 1.5px solid var(--line);
+  background: radial-gradient(90% 120% at 0% 0%, hsl(var(--h) 90% 90% / 0.65), transparent 70%), rgba(255, 255, 255, 0.45);
+}
+.group-title { display: flex; align-items: center; gap: 10px; margin: 0 0 14px 2px; font-family: var(--display); font-weight: 800; font-size: 18px; letter-spacing: -0.02em; }
+.group-title::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: hsl(var(--h) 75% 60%); }
+.group-title span { padding: 1px 9px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; }
+.group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+[data-view='logo'] .card { background: rgba(255, 255, 255, 0.85); }
 [data-view='logo'] .card { align-items: center; text-align: center; padding: 16px 8px 12px; gap: 8px; border-radius: 18px; }
 [data-view='logo'] .card-top { margin: 0; }
 [data-view='logo'] .logo { width: 56px; height: 56px; }
@@ -227,11 +242,16 @@ main { max-width: 1160px; margin: 0 auto; padding: 28px 20px 60px; }
   main { padding: 20px 16px 48px; }
   .grid { grid-template-columns: 1fr; gap: 12px; }
   .card { padding: 18px; }
-  .grid[data-view='logo'] { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+  .group { padding: 14px 12px; border-radius: 22px; }
+  .group-grid { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 8px; }
+  [data-view='logo'] .card-name { font-size: 11.5px; letter-spacing: -0.03em; }
+  .views { height: 48px; padding: 0 3px; }
+  .views button { width: 34px; }
   [data-view='logo'] .card { padding: 12px 4px 10px; }
   [data-view='logo'] .logo { width: 50px; height: 50px; }
   .seg button { padding: 6px 8px; font-size: 12.5px; }
   .count { display: none; }
+  .row { gap: 8px; }
   .search { padding: 0 14px; }
   .modal { align-items: end; padding: 0; }
   .sheet { width: 100%; max-height: 90vh; border-radius: 26px 26px 0 0; border-bottom: 0; padding: 24px 20px 28px; animation-name: slide; }
