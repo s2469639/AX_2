@@ -64,7 +64,6 @@ function makeCard(s, i) {
   const hue = hueOf(s.categories[0]);
   const card = el('article', 'card');
   card.style.setProperty('--h', hue);
-  card.style.setProperty('--i', Math.min(i, 14));
   card.tabIndex = 0;
   card.setAttribute('role', 'button');
   card.setAttribute('aria-label', `${s.name} 상세 보기`);
@@ -97,11 +96,35 @@ function makeCard(s, i) {
   return card;
 }
 
+// 스크롤 등장: 화면에 들어온 카드를 순서대로 띄움
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const revealer = ('IntersectionObserver' in window && !reduceMotion)
+  ? new IntersectionObserver((entries) => {
+      entries.filter((e) => e.isIntersecting).forEach((e, k) => {
+        const card = e.target;
+        revealer.unobserve(card);
+        card.style.transitionDelay = `${k * 55}ms`;
+        card.classList.add('in');
+        setTimeout(() => { card.style.transitionDelay = ''; }, 900);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 })
+  : null;
+
+let renderTimer = 0;
 function render() {
   const list = services.filter(matches);
-  grid.replaceChildren(...list.map(makeCard));
-  $('empty').hidden = list.length > 0;
-  $('count').textContent = `${list.length}개 서비스`;
+  const paint = () => {
+    grid.classList.remove('out');
+    const cards = list.map(makeCard);
+    grid.replaceChildren(...cards);
+    cards.forEach((c) => (revealer ? revealer.observe(c) : c.classList.add('in')));
+    $('empty').hidden = list.length > 0;
+    $('count').textContent = `${list.length}개 서비스`;
+  };
+  clearTimeout(renderTimer);
+  if (reduceMotion || !grid.children.length) return paint();
+  grid.classList.add('out'); // 기존 카드가 먼저 사라진 뒤 새 카드가 등장
+  renderTimer = setTimeout(paint, 160);
 }
 
 function fillList(ul, items) {

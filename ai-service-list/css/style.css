@@ -26,14 +26,19 @@ button, input { font: inherit; color: inherit; }
 ul { margin: 0; padding: 0; list-style: none; }
 a { color: inherit; }
 
-/* 배경: 잔잔한 컬러 그라데이션 + 약한 노이즈 */
-.bg {
-  position: fixed; inset: 0; z-index: -1;
+/* 배경: 잔잔한 컬러 그라데이션(천천히 흐름) + 약한 노이즈 */
+.bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--paper); }
+.bg::before {
+  content: ''; position: absolute; inset: -12%;
   background:
     radial-gradient(60vmax 50vmax at 8% -10%, rgba(255, 190, 160, 0.55), transparent 60%),
     radial-gradient(55vmax 45vmax at 100% 0%, rgba(176, 190, 255, 0.55), transparent 60%),
-    radial-gradient(60vmax 50vmax at 50% 110%, rgba(160, 228, 206, 0.5), transparent 60%),
-    var(--paper);
+    radial-gradient(60vmax 50vmax at 50% 110%, rgba(160, 228, 206, 0.5), transparent 60%);
+  animation: drift 26s ease-in-out infinite alternate; will-change: transform;
+}
+@keyframes drift {
+  from { transform: translate3d(-3%, -2%, 0) scale(1) rotate(0deg); }
+  to { transform: translate3d(3%, 3%, 0) scale(1.1) rotate(4deg); }
 }
 .bg::after {
   content: ''; position: absolute; inset: 0; opacity: 0.22; mix-blend-mode: multiply;
@@ -110,12 +115,13 @@ main { max-width: 1160px; margin: 0 auto; padding: 28px 20px 60px; }
     radial-gradient(120% 90% at 0% 0%, hsl(var(--h) 90% 90% / 0.7), transparent 62%),
     var(--card);
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s, border-color .25s;
-  animation: rise .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 28ms);
+  opacity: 0; transform: translateY(22px);
+  transition: opacity .55s cubic-bezier(.2, .8, .2, 1), transform .55s cubic-bezier(.2, .8, .2, 1), box-shadow .25s, border-color .25s;
 }
-.card:hover, .card:focus-visible { transform: translateY(-4px); border-color: var(--ink); box-shadow: 0 14px 30px -14px rgba(17, 17, 19, 0.35); }
-.card:focus-visible { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink); }
-@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+.card.in { opacity: 1; transform: none; }
+.grid.out .card.in { opacity: 0; transform: translateY(-8px) scale(.98); transition-duration: .15s; transition-delay: 0s !important; }
+.card.in:hover, .card.in:focus-visible { transform: translateY(-4px); border-color: var(--ink); box-shadow: 0 14px 30px -14px rgba(17, 17, 19, 0.35); }
+.card.in:focus-visible { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink); }
 
 .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
 .logo-link { display: block; border-radius: 16px; transition: transform .2s; }
@@ -127,6 +133,12 @@ main { max-width: 1160px; margin: 0 auto; padding: 28px 20px 60px; }
 }
 .logo img { width: 30px; height: 30px; object-fit: contain; filter: grayscale(1) contrast(1.05); transition: filter .25s; }
 .logo-link:hover .logo img, .card:hover .logo img, .logo-lg img { filter: none; }
+.card:hover .logo, .logo-link:hover .logo, .logo-link:focus-visible .logo, .logo-lg {
+  background: linear-gradient(135deg, hsl(var(--h) 95% 90%), hsl(calc(var(--h) + 55) 90% 80%));
+  border-color: var(--ink);
+}
+.logo { transition: background .3s, border-color .3s; }
+.card:hover .logo.fallback, .logo-link:hover .logo.fallback, .logo-lg.fallback { color: var(--ink); }
 .logo.fallback { background: var(--ink); color: #fff; font-family: var(--display); font-weight: 800; font-size: 22px; }
 .logo-lg { width: 64px; height: 64px; border-radius: 20px; flex: none; }
 .logo-lg img { width: 38px; height: 38px; }
