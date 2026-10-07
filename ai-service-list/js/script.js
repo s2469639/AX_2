@@ -9,7 +9,9 @@ const PRICE = {
 const HUES = [28, 215, 262, 330, 8, 190, 150, 100, 340, 45, 175, 285, 235, 20];
 const hueOf = (cat) => HUES[CATEGORIES.indexOf(cat) % HUES.length];
 
-const state = { cat: '전체', price: 'all', q: '' };
+const VIEWS = [['card', '카드'], ['logo', '로고']];
+const state = { cat: '전체', price: 'all', q: '', view: 'card' };
+try { const v = localStorage.getItem('view'); if (VIEWS.some(([k]) => k === v)) state.view = v; } catch (e) { /* 저장 불가 시 기본값 */ }
 
 const $ = (id) => document.getElementById(id);
 const grid = $('grid');
@@ -76,7 +78,11 @@ function makeCard(s, i) {
   link.title = `${s.name} 공식 사이트 열기`;
   link.setAttribute('aria-label', `${s.name} 공식 사이트 열기`);
   link.appendChild(makeLogo(s));
-  link.addEventListener('click', (e) => e.stopPropagation());
+  link.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // 로고 보기에서는 로고를 누르면 상세 모달이 열림 (공식 사이트는 모달에서)
+    if (state.view === 'logo') { e.preventDefault(); openModal(s, card); }
+  });
   top.append(link, badge(s.priceType));
 
   const name = el('h3', 'card-name', s.name);
@@ -157,7 +163,28 @@ function closeModal() {
   if (lastFocus && lastFocus.focus) lastFocus.focus();
 }
 
+function setView(v) {
+  state.view = v;
+  grid.dataset.view = v;
+  try { localStorage.setItem('view', v); } catch (e) { /* 무시 */ }
+  document.querySelectorAll('#views button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.view === v));
+}
+
 function buildFilters() {
+  const vbox = $('views');
+  VIEWS.forEach(([k, label]) => {
+    const b = el('button', null, label);
+    b.type = 'button';
+    b.dataset.view = k;
+    b.addEventListener('click', () => {
+      if (state.view === k) return;
+      setView(k);
+      render();
+    });
+    vbox.appendChild(b);
+  });
+  setView(state.view);
+
   const box = $('categories');
   ['전체', ...CATEGORIES].forEach((c) => {
     const b = el('button', 'chip', c);
