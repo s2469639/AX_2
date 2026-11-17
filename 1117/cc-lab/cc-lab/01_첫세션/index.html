@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>(가상) 견적 메모장</title>
+<style>
+  body { font-family: sans-serif; padding: 32px; }
+  .row { margin: 8px 0; }
+  .row label { display: block; font-size: 14px; margin-bottom: 4px; }
+  #msg { color: #c0392b; min-height: 1.2em; margin: 8px 0; }
+  #total { font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>(가상) 견적 메모장</h1>
+  <div class="row"><label for="item">상품명</label><input id="item" placeholder="상품명"></div>
+  <div class="row"><label for="price">단가(USD)</label><input id="price" type="number" placeholder="단가(USD)"></div>
+  <div class="row"><label for="qty">수량</label><input id="qty" type="number" placeholder="수량"></div>
+  <button onclick="addRow()">추가</button>
+  <p id="msg" role="alert"></p>
+  <ul id="list"></ul>
+  <p id="total">합계: $0</p>
+<script>
+  let total = 0;
+  function addRow() {
+    const itemEl = document.getElementById('item');
+    const priceEl = document.getElementById('price');
+    const qtyEl = document.getElementById('qty');
+    const msg = document.getElementById('msg');
+    const item = itemEl.value.trim();
+    if (!item || priceEl.value === '' || qtyEl.value === '') {
+      msg.textContent = (!item ? '상품명을' : priceEl.value === '' ? '단가를' : '수량을') + ' 입력해 주세요.';
+      return;
+    }
+    msg.textContent = '';
+    const price = Number(priceEl.value);
+    const qty = Number(qtyEl.value);
+    const li = document.createElement('li');
+    li.textContent = item + ' — $' + (price * qty);
+    document.getElementById('list').appendChild(li);
+    total += price * qty;
+    document.getElementById('total').textContent = '합계: $' + total;
+  }
+</script>
+</body>
+</html>

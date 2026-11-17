@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>모닝브레드 카드뉴스 원본</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;800&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+  /* after/skill.html 의 Golden Hour 토큰을 그대로 가져왔어요 */
+  :root{
+    --gh-mustard:#f4a900;
+    --gh-terracotta:#c1666b;
+    --gh-beige:#d4b896;
+    --gh-chocolate:#4a403a;
+    --gh-beige-deep:#bb9c76;
+    --gh-cream:#fbf5ea;
+    --gh-chocolate-soft:#62574f;
+
+    --color-bench:var(--gh-beige);
+    --color-bench-line:var(--gh-beige-deep);
+    --color-grain:rgba(255,255,255,.12);
+    --color-paper:var(--gh-cream);
+    --color-text:var(--gh-chocolate);
+    --color-text-soft:var(--gh-chocolate-soft);
+    --color-fresh:var(--gh-mustard);
+    --color-fresh-fade:rgba(244,169,0,0);
+    --color-marker:var(--gh-terracotta);
+    --color-shadow:rgba(74,64,58,.4);
+    --color-clip-light:#a39a90;
+    --color-clip-dark:#857b72;
+    --color-clip-slot:rgba(74,64,58,.35);
+    --color-clip-shine:rgba(255,255,255,.4);
+
+    --font-print:"Gothic A1",sans-serif;
+    --font-hand:"Nanum Pen Script",cursive;
+
+    /* 1080px 정사각형용 크기: 웹 간격(8px 단위)의 3배 = 24px 단위 */
+    --u:24px;
+    --canvas:1080px;
+    --margin-x:calc(var(--u) * 4);   /* 96 */
+    --margin-top:calc(var(--u) * 5); /* 120 */
+    --pad:calc(var(--u) * 3);        /* 72 */
+    --rule:3px;
+    --hair:2px;
+
+    --t-label:26px;
+    --t-small:30px;
+    --t-body:44px;
+    --t-head:96px;
+    --t-hand-md:72px;
+    --t-hand-lg:120px;
+    --t-hand-xl:180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#666;display:flex;flex-wrap:wrap;gap:40px;padding:40px;font-family:var(--font-print);color:var(--color-text);word-break:keep-all}
+
+  .board{
+    position:relative;width:var(--canvas);height:var(--canvas);overflow:hidden;flex:none;
+    background-color:var(--color-bench);
+    background-image:repeating-linear-gradient(0deg,var(--color-grain) 0 1px,transparent 1px 12px);
+  }
+  .paper{
+    position:absolute;top:var(--margin-top);left:var(--margin-x);right:var(--margin-x);bottom:var(--margin-x);
+    background:var(--color-paper);border-radius:6px;
+    padding:var(--pad) var(--pad) calc(var(--u) * 2);
+    display:flex;flex-direction:column;
+    box-shadow:0 2px 0 var(--color-bench-line), 0 calc(var(--u) * 1.5) calc(var(--u) * 2.5) calc(var(--u) * -1.5) var(--color-shadow);
+    transform:rotate(var(--tilt));
+  }
+  .clip{
+    position:absolute;top:calc(var(--u) * -1.25);left:var(--pad);
+    width:calc(var(--u) * 8);height:calc(var(--u) * 2.5);
+    border-radius:14px 14px 8px 8px;
+    background:linear-gradient(var(--color-clip-light),var(--color-clip-dark));
+    box-shadow:inset 0 3px 0 var(--color-clip-shine), 0 8px 16px var(--color-shadow);
+  }
+  .clip::after{content:"";position:absolute;left:var(--u);right:var(--u);top:var(--u);height:12px;border-radius:6px;background:var(--color-clip-slot)}
+
+  .head{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:calc(var(--u) * .5);border-bottom:var(--rule) solid var(--color-text)}
+  .brand{font-weight:800;font-size:var(--t-small);letter-spacing:-.02em}
+  .tag{font-size:var(--t-label);color:var(--color-text-soft);font-weight:600}
+  .body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:var(--u) 0}
+  .foot{display:flex;justify-content:flex-end;font-size:var(--t-label);font-weight:600;color:var(--color-text-soft);font-variant-numeric:tabular-nums}
+
+  .hand{font-family:var(--font-hand);color:var(--color-marker);line-height:.95;font-weight:400}
+  .h-print{font-weight:800;font-size:var(--t-head);line-height:1.08;letter-spacing:-.04em}
+  .sub{font-size:var(--t-small);color:var(--color-text-soft);line-height:1.5}
+
+  /* ── 1장: 하루 24칸 눈금 ── */
+  .day{position:relative;height:calc(var(--u) * 8);margin-bottom:calc(var(--u) * 2)}
+  .ticks{position:absolute;left:0;right:0;bottom:calc(var(--u) * 1.5);display:flex;justify-content:space-between;align-items:flex-end}
+  .ticks i{display:block;width:4px;height:var(--u);border-radius:2px;background:var(--color-bench-line)}
+  .ticks i.open{background:var(--color-text);height:calc(var(--u) * 1.5)}
+  .ticks i.now{background:var(--color-fresh);width:16px;height:calc(var(--u) * 5);border-radius:4px}
+  .hours{position:absolute;left:0;right:0;bottom:0;height:var(--u);font-size:22px;color:var(--color-text-soft);font-weight:600;font-variant-numeric:tabular-nums}
+  .hours span{position:absolute;transform:translateX(-50%)}
+  .day .mark{position:absolute;font-size:var(--t-hand-md);top:calc(var(--u) * -.5)}
+
+  /* ── 2장: 세 줄 ── */
+  .rows{list-style:none;margin-top:calc(var(--u) * 2)}
+  .rows li{display:grid;grid-template-columns:calc(var(--u) * 5.5) 1fr auto;align-items:center;column-gap:var(--u);padding:calc(var(--u) * 1.25) 0;border-bottom:var(--hair) dashed var(--color-bench-line)}
+  .rows li:first-child{border-top:var(--hair) dashed var(--color-bench-line)}
+  .rows time{font-weight:800;font-size:var(--t-small);font-variant-numeric:tabular-nums;color:var(--color-text-soft)}
+  .rows .n{font-weight:800;font-size:var(--t-body);letter-spacing:-.03em;line-height:1.2}
+  .rows .n small{display:block;font-weight:400;font-size:var(--t-label);color:var(--color-text-soft);letter-spacing:0;margin-top:6px}
+  .rows .p{font-weight:800;font-size:var(--t-small);font-variant-numeric:tabular-nums}
+  .rows li.fresh{background:linear-gradient(90deg,var(--color-fresh),var(--color-fresh-fade) 92%);margin:0 calc(var(--u) * -.75);padding-left:calc(var(--u) * .75);padding-right:calc(var(--u) * .75);border-top-color:transparent}
+  .rows li.fresh time{color:var(--color-text)}
+
+  /* ── 3장: 세 단계 ── */
+  .steps{list-style:none;margin-top:calc(var(--u) * 1.5);display:grid;row-gap:var(--u)}
+  .steps li{display:grid;grid-template-columns:calc(var(--u) * 3.5) 1fr;align-items:center;column-gap:var(--u)}
+  .ring{
+    width:calc(var(--u) * 3);height:calc(var(--u) * 3);display:grid;place-items:center;
+    border:4px solid var(--color-marker);border-radius:52% 46% 50% 48% / 48% 52% 46% 54%;
+    font-family:var(--font-hand);font-size:var(--t-hand-md);color:var(--color-marker);line-height:1;padding-top:6px;
+  }
+  .steps li:nth-child(2) .ring{border-radius:46% 54% 48% 52% / 52% 46% 54% 48%;transform:rotate(8deg)}
+  .steps li:nth-child(3) .ring{transform:rotate(-6deg)}
+  .steps b{font-weight:600;font-size:var(--t-body);letter-spacing:-.03em}
+  .deadline{margin-top:calc(var(--u) * 1.5);font-size:var(--t-small);color:var(--color-text-soft)}
+  .deadline mark{background:var(--color-fresh);color:var(--color-text);font-weight:800;padding:8px 14px;border-radius:6px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+
+  /* ── 4장: 비워 둔 자리 ── */
+  .slots{margin-top:calc(var(--u) * 2);display:grid;row-gap:calc(var(--u) * 1.25)}
+  .slot{position:relative}
+  .slot label{display:block;font-weight:600;font-size:var(--t-small);margin-bottom:calc(var(--u) * .5)}
+  .slot .box{height:calc(var(--u) * 6.5);border:var(--rule) dashed var(--color-bench-line);border-radius:10px}
+  .slot.short .box{height:calc(var(--u) * 5)}
+  .pin{position:absolute;right:var(--u);top:calc(var(--u) * 2.2);width:28px;height:28px;border-radius:50%;background:var(--color-fresh);box-shadow:0 0 0 8px var(--color-paper)}
+</style>
+</head>
+<body>
+
+<!-- 1장 -->
+<section class="board" id="card-1" style="--tilt:-.6deg">
+  <div class="paper">
+    <span class="clip"></span>
+    <div class="head"><span class="brand">모닝브레드</span><span class="tag">오늘의 오븐</span></div>
+    <div class="body">
+      <div class="day" aria-hidden="true">
+        <span class="hand mark" id="mark7">첫 판</span>
+        <div class="ticks" id="ticks"></div>
+        <div class="hours" id="hours"></div>
+      </div>
+      <p class="h-print">아침 7시,</p>
+      <p class="hand" style="font-size:var(--t-hand-xl);margin-top:8px">갓 구운 빵</p>
+    </div>
+    <div class="foot">1 / 4</div>
+  </div>
+</section>
+
+<!-- 2장 -->
+<section class="board" id="card-2" style="--tilt:.4deg">
+  <div class="paper">
+    <span class="clip"></span>
+    <div class="head"><span class="brand">모닝브레드</span><span class="tag">오늘의 빵</span></div>
+    <div class="body">
+      <p class="hand" style="font-size:var(--t-hand-lg)">오늘은 이 세 가지</p>
+      <ul class="rows">
+        <li class="fresh"><time>07:00</time><span class="n">버터 소금빵<small>고메 버터를 말아 겉은 바삭하게</small></span><span class="p">2,800원</span></li>
+        <li><time>07:00</time><span class="n">크루아상<small>사흘 숙성한 반죽을 27겹으로</small></span><span class="p">3,900원</span></li>
+        <li><time>12:00</time><span class="n">무화과 캄파뉴<small>반 덩이도 팔아요</small></span><span class="p">7,800원</span></li>
+      </ul>
+    </div>
+    <div class="foot">2 / 4</div>
+  </div>
+</section>
+
+<!-- 3장 -->
+<section class="board" id="card-3" style="--tilt:-.3deg">
+  <div class="paper">
+    <span class="clip"></span>
+    <div class="head"><span class="brand">모닝브레드</span><span class="tag">미리 맡기기</span></div>
+    <div class="body">
+      <p class="h-print" style="font-size:72px">전날 맡기면</p>
+      <p class="hand" style="font-size:var(--t-hand-lg)">아침에 따끈하게</p>
+      <ol class="steps">
+        <li><span class="ring">1</span><b>빵과 개수 고르기</b></li>
+        <li><span class="ring">2</span><b>찾으러 올 시간 정하기</b></li>
+        <li><span class="ring">3</span><b>이름 남기기</b></li>
+      </ol>
+      <p class="deadline"><mark>전날 저녁 6시까지</mark> 받아요</p>
+    </div>
+    <div class="foot">3 / 4</div>
+  </div>
+</section>
+
+<!-- 4장 -->
+<section class="board" id="card-4" style="--tilt:.5deg">
+  <div class="paper">
+    <span class="clip"></span>
+    <div class="head"><span class="brand">모닝브레드</span><span class="tag">찾아오는 길</span></div>
+    <div class="body">
+      <p class="hand" style="font-size:var(--t-hand-lg)">여기로 오세요</p>
+      <div class="slots">
+        <div class="slot"><label>위치</label><div class="box"></div></div>
+        <div class="slot short"><label>여는 시간</label><div class="box"></div></div>
+      </div>
+    </div>
+    <div class="foot">4 / 4</div>
+  </div>
+</section>
+
+<script>
+  // 1장: 0~23시 눈금. 문 여는 7~20시는 진하게, 7시는 노란 막대
+  const ticks = document.getElementById('ticks'), hours = document.getElementById('hours');
+  for (let h = 0; h < 24; h++) {
+    const i = document.createElement('i');
+    if (h >= 7 && h < 20) i.className = 'open';
+    if (h === 7) i.className = 'now';
+    ticks.appendChild(i);
+  }
+  requestAnimationFrame(() => {
+    const items = [...ticks.children], base = ticks.getBoundingClientRect().left;
+    [0, 7, 12, 20].forEach(h => {
+      const r = items[h].getBoundingClientRect(), s = document.createElement('span');
+      s.textContent = h; s.style.left = (r.left - base + r.width / 2) + 'px'; hours.appendChild(s);
+    });
+    const r7 = items[7].getBoundingClientRect(), mark = document.getElementById('mark7');
+    mark.style.left = (r7.left - base + r7.width + 16) + 'px';
+    document.body.dataset.ready = '1';
+  });
+</script>
+</body>
+</html>

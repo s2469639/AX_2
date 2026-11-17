@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모닝브레드 — 아침을 굽는 동네 빵집</title>
+<meta name="description" content="매일 새벽 4시에 굽는 동네 빵집, 모닝브레드.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;800&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* 색 토큰 */
+    --paper:#F3EDE1;
+    --paper-deep:#E9E0CE;
+    --ink:#1B1612;
+    --ink-soft:#5E544A;
+    --crust:#B5531C;
+    --butter:#EFC14A;
+    --rule:rgba(27,22,18,.16);
+    --rule-strong:#1B1612;
+
+    /* 폰트 토큰 */
+    --f-display:"Nanum Myeongjo",serif;
+    --f-body:"IBM Plex Sans KR",sans-serif;
+    --f-mono:"IBM Plex Mono",monospace;
+
+    /* 8px 간격 그리드 */
+    --s1:8px; --s2:16px; --s3:24px; --s4:32px; --s5:40px;
+    --s6:48px; --s8:64px; --s10:80px; --s12:96px; --s16:128px;
+
+    /* 모션 토큰: 들어올 때는 느리게, 나갈 때는 빠르게 */
+    --ease-out:cubic-bezier(.16,1,.3,1);
+    --ease-in:cubic-bezier(.4,0,1,1);
+    --t-in:320ms;
+    --t-out:140ms;
+    --t-reveal:720ms;
+
+    --radius:2px;
+    --gutter:var(--s3);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--f-body);
+    font-size:16px;line-height:1.75;
+    color:var(--ink);background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;overflow-wrap:break-word;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--butter);color:var(--ink)}
+  a{color:inherit;text-decoration:none}
+  img,svg{display:block}
+
+  .wrap{max-width:1200px;margin:0 auto;padding:0 var(--gutter)}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--gutter)}
+
+  .kicker{
+    font-family:var(--f-mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--crust);
+  }
+  .mono{font-family:var(--f-mono)}
+
+  /* 포커스: 모든 상호작용 요소 공통 */
+  :focus-visible{outline:2px solid var(--crust);outline-offset:4px;border-radius:var(--radius)}
+
+  /* ───────── 제호 ───────── */
+  .topline{
+    border-bottom:1px solid var(--rule);
+    font-family:var(--f-mono);font-size:12px;color:var(--ink-soft);
+  }
+  .topline .wrap{display:flex;justify-content:space-between;gap:var(--s2);padding-top:var(--s1);padding-bottom:var(--s1)}
+
+  .masthead{padding:var(--s4) 0 var(--s2);border-bottom:4px double var(--rule-strong)}
+  .masthead .wrap{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s3)}
+  .brand{
+    font-family:var(--f-display);font-weight:800;
+    font-size:clamp(40px,7vw,88px);line-height:1;letter-spacing:-.03em;
+  }
+  .brand span{color:var(--crust)}
+  .masthead nav{display:flex;gap:var(--s3);padding-bottom:var(--s1)}
+
+  .link{position:relative;font-size:14px;font-weight:500;padding:var(--s1) 0}
+  .link::after{
+    content:"";position:absolute;left:0;right:0;bottom:4px;height:2px;background:var(--crust);
+    transform:scaleX(0);transform-origin:right;
+    transition:transform var(--t-out) var(--ease-in);
+  }
+  .link:hover::after,.link:focus-visible::after{
+    transform:scaleX(1);transform-origin:left;
+    transition:transform var(--t-in) var(--ease-out);
+  }
+  .link:active{opacity:.6}
+
+  /* ───────── 버튼 ───────── */
+  .btn{
+    position:relative;isolation:isolate;overflow:hidden;
+    display:inline-flex;align-items:center;gap:var(--s1);
+    padding:var(--s2) var(--s3);
+    font-family:var(--f-body);font-weight:700;font-size:15px;
+    border:1.5px solid var(--ink);border-radius:var(--radius);
+    background:var(--ink);color:var(--paper);
+    cursor:pointer;
+    transition:transform var(--t-out) var(--ease-in);
+  }
+  /* 배경 채움은 transform으로만 움직임 */
+  .btn::before{
+    content:"";position:absolute;inset:0;z-index:-1;background:var(--crust);
+    transform:translateY(101%);
+    transition:transform var(--t-out) var(--ease-in);
+  }
+  .btn .arrow{transition:transform var(--t-out) var(--ease-in)}
+  .btn:hover,.btn:focus-visible{transform:translateY(-2px);transition:transform var(--t-in) var(--ease-out)}
+  .btn:hover::before,.btn:focus-visible::before{transform:translateY(0);transition:transform var(--t-in) var(--ease-out)}
+  .btn:hover .arrow,.btn:focus-visible .arrow{transform:translateX(4px);transition:transform var(--t-in) var(--ease-out)}
+  .btn:active{transform:translateY(0) scale(.98);transition-duration:60ms}
+
+  .btn.line{background:transparent;color:var(--ink)}
+  .btn.line::before{background:var(--ink)}
+  .btn.line:hover,.btn.line:focus-visible{color:var(--paper)}
+
+  /* ───────── 1면 헤드라인 ───────── */
+  .front{padding:var(--s6) 0 var(--s10)}
+  .front .grid{row-gap:var(--s4);align-items:start}
+  .headline{grid-column:1 / span 8}
+  .headline h1{
+    font-family:var(--f-display);font-weight:800;
+    font-size:clamp(44px,7.4vw,104px);line-height:1.04;letter-spacing:-.045em;
+    margin:var(--s2) 0 var(--s4);
+  }
+  .headline h1 .hl{
+    background:linear-gradient(transparent 62%, var(--butter) 62%, var(--butter) 92%, transparent 92%);
+  }
+  .deck{
+    display:grid;grid-template-columns:repeat(8,1fr);column-gap:var(--gutter);
+    border-top:1px solid var(--rule-strong);padding-top:var(--s3);
+  }
+  .deck p{grid-column:1 / span 5;font-size:18px;line-height:1.7;color:var(--ink-soft)}
+  .deck p::first-letter{
+    font-family:var(--f-display);font-weight:800;float:left;
+    font-size:64px;line-height:.9;padding:var(--s1) var(--s1) 0 0;color:var(--crust);
+  }
+  .deck .ctas{grid-column:6 / span 3;display:flex;flex-direction:column;gap:var(--s1);align-items:stretch}
+  .deck .ctas .btn{justify-content:space-between}
+
+  .side{grid-column:10 / span 3;border-left:1px solid var(--rule);padding-left:var(--s3);margin-top:var(--s5)}
+  .figure{position:relative;aspect-ratio:3/4;background:var(--ink);overflow:hidden;margin-bottom:var(--s2)}
+  .figure svg{width:100%;height:100%}
+  .figure .stamp{
+    position:absolute;top:var(--s2);right:var(--s2);
+    font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;
+    color:var(--ink);background:var(--butter);padding:4px var(--s1);
+  }
+  .caption{font-size:13px;color:var(--ink-soft);line-height:1.6}
+  .live{
+    display:flex;align-items:center;gap:var(--s1);margin-top:var(--s3);padding-top:var(--s2);
+    border-top:1px solid var(--rule);font-family:var(--f-mono);font-size:12px
+  }
+  .live i{width:8px;height:8px;border-radius:50%;background:var(--crust);animation:blink 1.6s steps(1) infinite}
+  @keyframes blink{50%{opacity:.2}}
+
+  /* ───────── 시세표(메뉴) ───────── */
+  .section{padding:var(--s12) 0;border-top:1px solid var(--rule-strong)}
+  .sec-title{grid-column:1 / span 4}
+  .sec-title h2{
+    font-family:var(--f-display);font-weight:800;
+    font-size:clamp(32px,4.4vw,56px);line-height:1.1;letter-spacing:-.03em;margin-top:var(--s2)
+  }
+  .sec-title p{margin-top:var(--s3);color:var(--ink-soft);max-width:22em}
+
+  .board{grid-column:6 / span 7;list-style:none;border-top:1px solid var(--rule-strong)}
+  .item{border-bottom:1px solid var(--rule)}
+  .item a{
+    position:relative;display:grid;grid-template-columns:40px 1fr auto;column-gap:var(--s3);align-items:baseline;
+    padding:var(--s3) var(--s1);
+  }
+  .item a::before{
+    content:"";position:absolute;inset:0;background:var(--paper-deep);z-index:-1;
+    transform:scaleY(0);transform-origin:bottom;
+    transition:transform var(--t-out) var(--ease-in);
+  }
+  .item a:hover::before,.item a:focus-visible::before{transform:scaleY(1);transition:transform var(--t-in) var(--ease-out)}
+  .item a:active::before{opacity:.6}
+  .item a{isolation:isolate}
+  .no{font-family:var(--f-mono);font-size:12px;color:var(--ink-soft)}
+  .name{font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1.3;letter-spacing:-.02em}
+  .name small{display:block;font-family:var(--f-body);font-weight:400;font-size:14px;color:var(--ink-soft);letter-spacing:0;margin-top:4px}
+  .meta{text-align:right;font-family:var(--f-mono)}
+  .meta b{display:block;font-weight:500;font-size:18px}
+  .meta span{font-size:12px;color:var(--ink-soft)}
+  .tag{
+    display:inline-block;margin-left:var(--s1);vertical-align:middle;
+    font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;font-weight:500;
+    padding:2px 6px;background:var(--crust);color:var(--paper);
+  }
+  .item:first-child .name{font-size:32px}
+
+  /* ───────── 하루 일정 ───────── */
+  .day{background:var(--ink);color:var(--paper);border-top:none}
+  .day .sec-title{grid-column:1 / span 8}
+  .day .kicker{color:var(--butter)}
+  .day .sec-title p{color:rgba(243,237,225,.7)}
+  .hours{grid-column:1 / -1;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;margin-top:var(--s8);border-top:1px solid rgba(243,237,225,.25)}
+  .hour{padding:var(--s3) var(--s3) 0 0;border-right:1px solid rgba(243,237,225,.15);margin-right:var(--s3)}
+  .hour:last-child{border-right:none;margin-right:0}
+  .hour time{display:block;font-family:var(--f-mono);font-size:clamp(28px,3vw,40px);line-height:1.1;color:var(--paper)}
+  .hour:first-child time{font-family:var(--f-display);font-weight:800;font-size:clamp(64px,8vw,112px);line-height:1;color:var(--butter);letter-spacing:-.04em}
+  .hour h3{font-size:16px;font-weight:700;margin:var(--s2) 0 var(--s1)}
+  .hour p{font-size:14px;color:rgba(243,237,225,.65);max-width:20em}
+
+  /* ───────── 사설(이야기) ───────── */
+  .story .grid{row-gap:var(--s6)}
+  .quote{grid-column:1 / span 7}
+  .quote blockquote{
+    font-family:var(--f-display);font-weight:800;
+    font-size:clamp(32px,4.6vw,60px);line-height:1.25;letter-spacing:-.03em;
+  }
+  .quote blockquote::before{content:"“";display:block;color:var(--crust);font-size:1.6em;line-height:.6;margin-bottom:var(--s2)}
+  .quote cite{display:block;margin-top:var(--s3);font-style:normal;font-family:var(--f-mono);font-size:13px;color:var(--ink-soft)}
+  .column{grid-column:9 / span 4;column-count:1;color:var(--ink-soft)}
+  .column p+p{margin-top:var(--s2)}
+  .figures{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule-strong)}
+  .fig{padding:var(--s3) var(--s3) 0 0}
+  .fig + .fig{border-left:1px solid var(--rule);padding-left:var(--s3)}
+  .fig b{display:block;font-family:var(--f-display);font-weight:800;font-size:clamp(40px,5vw,64px);line-height:1;letter-spacing:-.03em;color:var(--crust)}
+  .fig span{display:block;margin-top:var(--s1);font-size:14px;color:var(--ink-soft)}
+
+  /* ───────── 독자 투고(후기) ───────── */
+  .letters{grid-column:6 / span 7;display:grid;grid-template-columns:1fr 1fr;column-gap:var(--gutter);row-gap:var(--s4)}
+  .letter{border-top:1px solid var(--rule-strong);padding-top:var(--s2)}
+  .letter:first-child{grid-column:1 / -1}
+  .letter:first-child p{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1.4;letter-spacing:-.02em}
+  .letter p{font-size:16px}
+  .letter footer{margin-top:var(--s2);font-family:var(--f-mono);font-size:12px;color:var(--ink-soft)}
+
+  /* ───────── 광고(방문 안내) ───────── */
+  .ad{padding:var(--s12) 0}
+  .ad-box{
+    border:2px solid var(--ink);padding:var(--s8) var(--s6);position:relative;
+    display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--gutter);row-gap:var(--s5);
+    background:var(--paper);
+  }
+  .ad-box::after{content:"";position:absolute;inset:6px;border:1px solid var(--ink);pointer-events:none}
+  .ad-label{position:absolute;top:-10px;left:var(--s6);background:var(--paper);padding:0 var(--s1);font-family:var(--f-mono);font-size:12px;letter-spacing:.16em}
+  .ad-copy{grid-column:1 / span 7}
+  .ad-copy h2{font-family:var(--f-display);font-weight:800;font-size:clamp(36px,5.4vw,72px);line-height:1.05;letter-spacing:-.04em}
+  .ad-copy h2 em{font-style:normal;color:var(--crust)}
+  .ad-copy p{margin:var(--s3) 0 var(--s4);color:var(--ink-soft);max-width:28em}
+  .ad-info{grid-column:9 / span 4;align-self:end}
+  .ad-info dl{display:grid;grid-template-columns:80px 1fr;row-gap:var(--s2);font-size:14px}
+  .ad-info dt{font-family:var(--f-mono);font-size:12px;color:var(--ink-soft);padding-top:2px}
+  .ad-info dd small{display:block;color:var(--ink-soft)}
+  .off{display:inline-block;margin-top:4px;font-family:var(--f-mono);font-size:11px;background:var(--ink);color:var(--paper);padding:2px 6px}
+
+  .colophon{border-top:4px double var(--rule-strong);padding:var(--s3) 0 var(--s5);font-family:var(--f-mono);font-size:12px;color:var(--ink-soft)}
+  .colophon .wrap{display:flex;justify-content:space-between;gap:var(--s2);flex-wrap:wrap}
+
+  /* ───────── 등장 모션 (transform + opacity만) ───────── */
+  .rv{opacity:0;transform:translateY(24px)}
+  .rv.in{opacity:1;transform:none;transition:opacity var(--t-reveal) var(--ease-out),transform var(--t-reveal) var(--ease-out)}
+  .front .rv{animation:rise var(--t-reveal) var(--ease-out) forwards}
+  /* 같은 줄의 요소는 조금씩 늦게 (1면=애니메이션, 나머지=트랜지션) */
+  .d1{animation-delay:80ms;transition-delay:80ms!important}
+  .d2{animation-delay:160ms;transition-delay:160ms!important}
+  .d3{animation-delay:240ms;transition-delay:240ms!important}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .no-js .rv{opacity:1;transform:none}
+
+  /* 모션 줄이기 존중 */
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .rv{opacity:1;transform:none}
+  }
+
+  /* ───────── 반응형 ───────── */
+  @media (max-width:960px){
+    .masthead nav{display:none}
+    .headline,.side{grid-column:1 / -1}
+    .side{border-left:none;padding-left:0;margin-top:0;display:grid;grid-template-columns:1fr 1fr;column-gap:var(--gutter)}
+    .side .figure{aspect-ratio:1/1;margin:0}
+    .deck p{grid-column:1 / -1}
+    .deck .ctas{grid-column:1 / -1;flex-direction:row;flex-wrap:wrap;margin-top:var(--s3)}
+    .sec-title,.board,.quote,.column,.letters,.ad-copy,.ad-info{grid-column:1 / -1}
+    .board{margin-top:var(--s5)}
+    .letters{margin-top:var(--s5)}
+    .hours{grid-template-columns:1fr 1fr;row-gap:var(--s4)}
+    .hour:first-child{grid-column:1 / -1;border-right:none}
+    .hour:nth-child(3){border-right:none;margin-right:0}
+    .section{padding:var(--s10) 0}
+  }
+  @media (max-width:560px){
+    :root{--gutter:var(--s2)}
+    .topline .wrap span:last-child{display:none}
+    .side{grid-template-columns:1fr}
+    .hours{grid-template-columns:1fr}
+    .hour{border-right:none;margin-right:0}
+    .figures{grid-template-columns:1fr}
+    .fig + .fig{border-left:none;padding-left:0;border-top:1px solid var(--rule)}
+    .letters{grid-template-columns:1fr}
+    .ad-box{padding:var(--s5) var(--s3)}
+    .ad-label{left:var(--s3)}
+    .item a{grid-template-columns:24px 1fr;row-gap:var(--s1)}
+    .meta{grid-column:2;text-align:left}
+    .meta b{display:inline;margin-right:var(--s1)}
+  }
+</style>
+</head>
+<body class="no-js">
+
+<div class="topline">
+  <div class="wrap">
+    <span id="today">2026년 11월 13일 금요일</span>
+    <span>오늘의 오븐 온도 210℃ · 제 3,652호</span>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <a href="#" class="brand" aria-label="모닝브레드 처음으로">모닝<span>브레드</span></a>
+    <nav aria-label="주요 메뉴">
+      <a class="link" href="#menu">오늘의 빵</a>
+      <a class="link" href="#day">하루 일정</a>
+      <a class="link" href="#story">이야기</a>
+      <a class="link" href="#visit">오시는 길</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- 1면 -->
+  <section class="front">
+    <div class="wrap grid">
+      <div class="headline">
+        <p class="kicker rv">1면 · 동네 소식</p>
+        <h1 class="rv d1">새벽 4시,<br>이 골목의 <span class="hl">아침은</span><br>오븐에서 시작된다</h1>
+        <div class="deck rv d2">
+          <p>매일 새벽 직접 반죽하고 직접 굽는 동네 빵집 모닝브레드가 올해로 문을 연 지 10년이 되었습니다. 그날 구운 빵은 그날 모두 팝니다.</p>
+          <div class="ctas">
+            <a href="#menu" class="btn">오늘의 빵 보기 <span class="arrow" aria-hidden="true">→</span></a>
+            <a href="#visit" class="btn line">미리 주문하기 <span class="arrow" aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </div>
+
+      <aside class="side rv d3" aria-label="오늘의 사진">
+        <figure class="figure">
+          <span class="stamp">PHOTO · 04:12</span>
+          <svg viewBox="0 0 300 400" aria-hidden="true">
+            <rect width="300" height="400" fill="#1B1612"/>
+            <circle cx="150" cy="190" r="118" fill="#B5531C" opacity=".22"/>
+            <path d="M54 250c0-62 44-104 96-104s96 42 96 104c0 16-10 24-26 24H80c-16 0-26-8-26-24z" fill="#B5531C"/>
+            <path d="M54 250c0-62 44-104 96-104s96 42 96 104" fill="none" stroke="#EFC14A" stroke-width="2" opacity=".6"/>
+            <g stroke="#F3EDE1" stroke-width="6" stroke-linecap="round" fill="none" opacity=".85">
+              <path d="M104 186c9 14 14 30 14 48"/><path d="M150 172v62"/><path d="M196 186c-9 14-14 30-14 48"/>
+            </g>
+            <line x1="40" y1="300" x2="260" y2="300" stroke="#F3EDE1" stroke-opacity=".25"/>
+            <text x="40" y="332" font-family="IBM Plex Mono" font-size="12" fill="#F3EDE1" fill-opacity=".6">NO.01 / BUTTER SALT ROLL</text>
+          </svg>
+        </figure>
+        <div>
+          <p class="caption">첫 판으로 나온 버터 소금빵. 하루 세 번, 오전 7시와 11시, 오후 3시에 굽는다.</p>
+          <p class="live"><i aria-hidden="true"></i> 지금 영업 중 · 20:00 마감</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- 시세표 -->
+  <section id="menu" class="section">
+    <div class="wrap grid">
+      <div class="sec-title rv">
+        <p class="kicker">2면 · 오늘의 시세</p>
+        <h2>오늘 아침에<br>구운 빵</h2>
+        <p>매일 32가지를 굽습니다. 인기 빵은 나오는 시간을 맞춰 오시면 따뜻할 때 드실 수 있어요.</p>
+      </div>
+      <ol class="board">
+        <li class="item rv"><a href="#visit">
+          <span class="no">01</span>
+          <span class="name">버터 소금빵<span class="tag">BEST</span><small>프랑스산 고메 버터를 말아 겉은 바삭, 속은 촉촉하게</small></span>
+          <span class="meta"><b>2,800</b><span>07 · 11 · 15시</span></span>
+        </a></li>
+        <li class="item rv"><a href="#visit">
+          <span class="no">02</span>
+          <span class="name">우유 식빵<small>국산 우유로만 반죽해 결대로 찢어지는 식빵</small></span>
+          <span class="meta"><b>5,500</b><span>08:30</span></span>
+        </a></li>
+        <li class="item rv"><a href="#visit">
+          <span class="no">03</span>
+          <span class="name">앙버터<span class="tag">NEW</span><small>직접 쑨 팥앙금과 두툼한 버터 한 장</small></span>
+          <span class="meta"><b>4,200</b><span>10:00</span></span>
+        </a></li>
+        <li class="item rv"><a href="#visit">
+          <span class="no">04</span>
+          <span class="name">크루아상<small>사흘 저온 숙성한 반죽을 27겹으로 접어서</small></span>
+          <span class="meta"><b>3,900</b><span>07:00</span></span>
+        </a></li>
+        <li class="item rv"><a href="#visit">
+          <span class="no">05</span>
+          <span class="name">무화과 캄파뉴<small>천연 발효종으로 48시간, 반 덩이도 팔아요</small></span>
+          <span class="meta"><b>7,800</b><span>12:00</span></span>
+        </a></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 하루 일정 -->
+  <section id="day" class="section day">
+    <div class="wrap grid">
+      <div class="sec-title rv">
+        <p class="kicker">3면 · 하루 일정</p>
+        <h2>동네가 잠든 사이<br>오븐이 먼저 켜진다</h2>
+      </div>
+      <div class="hours">
+        <div class="hour rv"><time>04:00</time><h3>반죽을 깨운다</h3><p>전날 밤 숙성한 반죽을 꺼내 하나씩 모양을 잡는다. 하루 중 가장 조용하고 가장 바쁜 시간.</p></div>
+        <div class="hour rv d1"><time>07:00</time><h3>문을 연다</h3><p>첫 소금빵과 크루아상이 나온다.</p></div>
+        <div class="hour rv d2"><time>15:00</time><h3>두 번째 오븐</h3><p>하교 시간에 맞춰 간식 빵을 굽는다.</p></div>
+        <div class="hour rv d3"><time>20:00</time><h3>나눔으로 닫는다</h3><p>남은 빵은 지역아동센터로 간다.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 사설 -->
+  <section id="story" class="section story">
+    <div class="wrap grid">
+      <div class="quote rv">
+        <p class="kicker">4면 · 사설</p>
+        <blockquote style="margin-top:var(--s3)">빵은 결국 기다림이다. 서두르지 않으면 맛이 난다.</blockquote>
+        <cite>— 모닝브레드 대표 제빵사</cite>
+      </div>
+      <div class="column rv d1">
+        <p>작은 골목 모퉁이에서 오븐 하나로 시작했다. 화려한 빵보다 매일 먹어도 질리지 않는 빵을 굽고 싶었다.</p>
+        <p>첨가물 없이 천연 발효종을 쓰고, 밀가루와 버터는 직접 맛보고 고른다. 10년째 같은 자리에서 같은 마음으로 굽는다.</p>
+      </div>
+      <div class="figures rv d2">
+        <div class="fig"><b>10년</b><span>같은 골목, 같은 오븐</span></div>
+        <div class="fig"><b>48시간</b><span>천연 발효종 숙성</span></div>
+        <div class="fig"><b>0개</b><span>들어가는 인공 첨가물</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 독자 투고 -->
+  <section class="section">
+    <div class="wrap grid">
+      <div class="sec-title rv">
+        <p class="kicker">5면 · 독자 투고</p>
+        <h2>이웃들이<br>보내온 편지</h2>
+      </div>
+      <div class="letters">
+        <article class="letter rv"><p>“출근길 소금빵 하나가 하루의 낙이에요. 11시 빵이 제일 맛있어요.”</p><footer>3년째 단골 · 회사원</footer></article>
+        <article class="letter rv d1"><p>“아이가 우유식빵만 먹어요. 첨가물이 없어서 안심하고 줘요.”</p><footer>두 아이 부모</footer></article>
+        <article class="letter rv d2"><p>“사장님이 이름을 기억해 주시는 빵집. 동네에 있어서 다행이에요.”</p><footer>옆 골목 주민</footer></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 광고 -->
+  <section id="visit" class="ad">
+    <div class="wrap">
+      <div class="ad-box rv">
+        <span class="ad-label">ADVERTISEMENT</span>
+        <div class="ad-copy">
+          <h2>내일 아침,<br><em>따뜻한 빵</em>을<br>맡겨 두세요</h2>
+          <p>전날 오후 6시까지 전화로 주문하면 원하는 시간에 맞춰 구워 둡니다. 케이크와 단체 주문은 3일 전까지 받아요.</p>
+          <a href="tel:0212345678" class="btn">02-1234-5678 전화 주문 <span class="arrow" aria-hidden="true">→</span></a>
+        </div>
+        <div class="ad-info">
+          <dl>
+            <dt>주소</dt><dd>서울시 ○○구 햇살로 12, 1층<small>○○역 2번 출구 도보 3분</small></dd>
+            <dt>영업</dt><dd>화–일 07:00–20:00<br><span class="off">월요일 휴무</span></dd>
+            <dt>주차</dt><dd>가게 앞 2대</dd>
+            <dt>SNS</dt><dd><a class="link" href="#">@morningbread_bakery</a></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="colophon">
+  <div class="wrap">
+    <span>© 2026 모닝브레드 · 매일 아침 발행</span>
+    <span>발행인 모닝브레드 제빵팀</span>
+  </div>
+</footer>
+
+<script>
+  document.body.classList.remove('no-js');
+
+  // 오늘 날짜를 신문 제호처럼 표시
+  (function(){
+    const d = new Date(), days = ['일','월','화','수','목','금','토'];
+    const el = document.getElementById('today');
+    if (el) el.textContent = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
+  })();
+
+  // 스크롤 등장 (1면은 CSS 애니메이션으로 처리)
+  const targets = document.querySelectorAll('main .rv:not(.front .rv)');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    targets.forEach((el) => io.observe(el));
+  } else {
+    targets.forEach((el) => el.classList.add('in'));
+  }
+</script>
+</body>
+</html>

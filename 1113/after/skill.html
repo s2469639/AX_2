@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모닝브레드 오늘의 오븐</title>
+<meta name="description" content="모닝브레드에서 오늘 몇 시에 어떤 빵이 나오는지 알려 드려요.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;600;800&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+  /* =========================================================
+     테마: Golden Hour (theme-factory)
+     이 아래 이름표만 바꾸면 페이지 전체의 색, 간격, 글자 크기가 바뀌어요.
+     ========================================================= */
+  :root{
+    /* ── 1. 테마 원본 색 (theme-factory/themes/golden-hour.md) ── */
+    --gh-mustard:#f4a900;      /* Mustard Yellow: 강조 */
+    --gh-terracotta:#c1666b;   /* Terracotta: 보조 강조 */
+    --gh-beige:#d4b896;        /* Warm Beige: 배경 */
+    --gh-chocolate:#4a403a;    /* Chocolate Brown: 글자 */
+    /* 원본 색에서 밝기만 바꾼 보조색 */
+    --gh-beige-deep:#bb9c76;
+    --gh-cream:#fbf5ea;
+    --gh-chocolate-soft:#51463d;   /* 베이지 위에서도 4.5:1 이상 */
+
+    /* ── 2. 쓰임새별 색 (페이지 안에서는 이것만 써요) ── */
+    --color-bench:var(--gh-beige);              /* 나무 도마 배경 */
+    --color-bench-line:var(--gh-beige-deep);    /* 점선, 구분선 */
+    --color-grain:rgba(255,255,255,.12);        /* 나뭇결 */
+    --color-paper:var(--gh-cream);              /* 작업표, 카드 종이 */
+    --color-text:var(--gh-chocolate);
+    --color-text-soft:var(--gh-chocolate-soft);
+    --color-on-dark:var(--gh-cream);            /* 어두운 바탕 위 글자 */
+    --color-fresh:var(--gh-mustard);            /* 방금 나온 빵 */
+    --color-fresh-fade:rgba(244,169,0,0);
+    --color-marker:var(--gh-terracotta);        /* 손글씨, 체크, 포커스 */
+    --color-shadow:rgba(74,64,58,.4);
+    --color-shadow-soft:rgba(74,64,58,.22);
+    --color-clip-light:#a39a90;
+    --color-clip-dark:#857b72;
+    --color-clip-slot:rgba(74,64,58,.35);
+    --color-clip-shine:rgba(255,255,255,.4);
+
+    /* ── 3. 글꼴 ── */
+    --font-print:"Gothic A1",sans-serif;
+    --font-hand:"Nanum Pen Script",cursive;
+
+    /* ── 4. 글자 크기 ── */
+    --text-xs:14px;
+    --text-sm:16px;
+    --text-md:18px;
+    --text-lg:24px;
+    --text-xl:32px;
+    --text-hand-sm:28px;
+    --text-hand-md:32px;
+    --text-hand-xl:clamp(48px,7vw,80px);
+    --leading-body:1.7;
+    --leading-tight:1.05;
+    --leading-none:1;
+
+    /* ── 5. 간격 (8px 단위) ── */
+    --space-half:4px;
+    --space-1:8px;
+    --space-2:16px;
+    --space-3:24px;
+    --space-4:32px;
+    --space-5:40px;
+    --space-6:48px;
+    --space-8:64px;
+    --space-10:80px;
+    --space-12:96px;
+
+    /* ── 6. 크기, 모서리 ── */
+    --size-page:1120px;
+    --size-measure:640px;
+    --size-tap:48px;
+    --size-time-col:72px;
+    --size-time-col-sm:56px;
+    --size-clip-w:120px;
+    --size-clip-h:40px;
+    --size-check-w:24px;
+    --size-check-h:12px;
+    --size-line:3px;
+    --size-card-min:200px;
+    --border-hair:1px;
+    --border-mid:1.5px;
+    --border-bold:2px;
+    --size-toast:440px;
+    --radius-paper:4px;
+    --radius-field:8px;
+    --radius-pill:999px;
+
+    /* ── 8. 히어로 배경 (algorithmic-art "Suspended Light", 버전 A, seed 7) ── */
+    --hero-image:url("hero-bg/hero-a.webp");
+    --hero-height:960px;
+    --hero-mask:linear-gradient(to bottom, black 50%, transparent 100%);
+
+    /* ── 7. 움직임 (animate 스킬 기준) ── */
+    --ease-out-quint:cubic-bezier(.23,1,.32,1);  /* 들어올 때 */
+    --ease-in-cubic:cubic-bezier(.32,0,.67,0);   /* 나갈 때 */
+    --ease-hover:ease;
+    --dur-press:100ms;
+    --dur-hover:150ms;
+    --dur-hover-out:110ms;
+    --dur-enter:280ms;
+    --dur-exit:200ms;          /* 들어올 때의 약 70% */
+    --dur-reveal:300ms;
+    --dur-stagger:70ms;
+    --dur-draw:700ms;
+    --lift:-2px;
+    --press:.97;
+    --rise:16px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:var(--font-print);font-size:var(--text-sm);line-height:var(--leading-body);
+    color:var(--color-text);background-color:var(--color-bench);
+    background-image:repeating-linear-gradient(0deg, var(--color-grain) 0 var(--border-hair), transparent var(--border-hair) var(--space-1));
+    word-break:keep-all;overflow-wrap:break-word;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  :focus-visible{outline:var(--size-line) solid var(--color-marker);outline-offset:var(--size-line);border-radius:var(--radius-field)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+  .bench{position:relative;z-index:1;max-width:var(--size-page);margin:0 auto;padding:var(--space-4) var(--space-3) var(--space-10)}
+
+  /* 히어로 배경: 아침 햇살 속 밀가루. 움직이지 않는 그림이라 모션 설정과 상관없어요 */
+  body{position:relative}
+  .hero-bg{
+    position:absolute;top:0;left:0;right:0;height:var(--hero-height);z-index:0;pointer-events:none;
+    background:var(--hero-image) right top / cover no-repeat;
+    -webkit-mask-image:var(--hero-mask);mask-image:var(--hero-mask);
+  }
+
+  /* 머리 줄 */
+  .top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:var(--space-1) var(--space-3);margin-bottom:var(--space-5)}
+  .name{font-weight:800;font-size:var(--text-lg);letter-spacing:-.02em;text-decoration:none}
+  .open{font-size:var(--text-sm);color:var(--color-text-soft)}
+  .open b{font-weight:600;color:var(--color-text)}
+
+  .layout{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,4fr);gap:var(--space-6);align-items:start}
+
+  /* ───────── 오븐 작업표 ───────── */
+  .sheet{
+    position:relative;background:var(--color-paper);
+    padding:var(--space-8) var(--space-5) var(--space-5);
+    border-radius:var(--radius-paper);
+    box-shadow:0 var(--border-hair) 0 var(--color-bench-line), 0 var(--space-3) var(--space-5) calc(var(--space-3) * -1) var(--color-shadow);
+    transform:rotate(-.6deg);
+  }
+  .clip{
+    position:absolute;top:calc(var(--space-2) * -1);left:var(--space-5);
+    width:var(--size-clip-w);height:var(--size-clip-h);border-radius:var(--radius-field) var(--radius-field) var(--radius-paper) var(--radius-paper);
+    background:linear-gradient(var(--color-clip-light),var(--color-clip-dark));
+    box-shadow:inset 0 var(--border-bold) 0 var(--color-clip-shine), 0 var(--space-half) var(--space-1) var(--color-shadow);
+  }
+  .clip::after{content:"";position:absolute;left:var(--space-3);right:var(--space-3);top:var(--space-1);height:var(--space-1);border-radius:var(--space-half);background:var(--color-clip-slot)}
+  .sheet-head{display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-2);font-size:var(--text-xs);color:var(--color-text-soft);border-bottom:var(--border-bold) solid var(--color-text);padding-bottom:var(--space-1)}
+  .sheet-head strong{font-size:var(--text-sm);color:var(--color-text);font-weight:800}
+
+  .note{
+    font-family:var(--font-hand);color:var(--color-marker);
+    font-size:var(--text-hand-xl);line-height:var(--leading-tight);
+    margin:var(--space-3) 0 var(--space-4);max-width:14em;
+    transform:rotate(-1.2deg);transform-origin:left;
+  }
+
+  .batches{list-style:none}
+  .batch{
+    display:grid;grid-template-columns:var(--size-time-col) 1fr auto;gap:var(--space-2);align-items:baseline;
+    padding:var(--space-2) 0;border-bottom:var(--border-hair) dashed var(--color-bench-line);
+  }
+  .batch time{font-weight:800;font-size:var(--text-md);font-variant-numeric:tabular-nums}
+  .what{font-size:var(--text-md)}
+  .state{font-family:var(--font-hand);font-size:var(--text-hand-md);line-height:var(--leading-none);color:var(--color-marker);white-space:nowrap}
+
+  .batch.done time,.batch.done .what{color:var(--color-text-soft)}
+  .batch.done .state::before{
+    content:"";display:inline-block;width:var(--size-check-w);height:var(--size-check-h);
+    border-left:var(--size-line) solid var(--color-marker);border-bottom:var(--size-line) solid var(--color-marker);
+    transform:rotate(-45deg) translateY(calc(var(--space-half) * -1));
+  }
+  .batch.fresh{
+    background:linear-gradient(90deg,var(--color-fresh),var(--color-fresh-fade));
+    border-bottom-color:transparent;padding-left:var(--space-1);margin-left:calc(var(--space-1) * -1);
+  }
+  .batch.fresh time,.batch.fresh .what{color:var(--color-text);font-weight:600}
+  .batch.fresh .state{color:var(--color-text)}
+  .batch.next .what{font-weight:600}
+
+  .now{display:flex;align-items:center;gap:var(--space-1);padding:var(--space-1) 0;list-style:none}
+  .now span{font-family:var(--font-hand);font-size:var(--text-hand-md);color:var(--color-marker);white-space:nowrap}
+  .now i{
+    flex:1;height:var(--size-line);border-radius:var(--radius-pill);background:var(--color-marker);
+    transform-origin:left;transform:scaleX(0);
+    animation:draw var(--dur-draw) var(--ease-out-quint) var(--dur-enter) forwards;
+  }
+  @keyframes draw{to{transform:scaleX(1)}}
+
+  .sheet-foot{margin-top:var(--space-3);font-size:var(--text-xs);color:var(--color-text-soft)}
+
+  /* ───────── 옆 칸 ───────── */
+  .side{display:grid;gap:var(--space-5);padding-top:var(--space-2)}
+  .side h2{font-size:var(--text-md);font-weight:800;margin-bottom:var(--space-1)}
+  .side p,.side dd{font-size:var(--text-sm)}
+  .muted{color:var(--color-text-soft)}
+
+  /* 예약 양식 */
+  .order{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);margin-top:var(--space-2)}
+  .field{display:grid;gap:var(--space-half)}
+  .field.wide{grid-column:1 / -1}
+  .field label{font-size:var(--text-xs);font-weight:600}
+  .field input,.field select{
+    font:inherit;font-size:var(--text-sm);color:var(--color-text);
+    min-height:var(--size-tap);padding:0 var(--space-2);
+    background:var(--color-paper);border:var(--border-hair) solid var(--color-bench-line);border-radius:var(--radius-field);
+  }
+  .field input:hover,.field select:hover{border-color:var(--color-text-soft)}
+  .order .actions{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:var(--space-1)}
+  .order-note{grid-column:1 / -1;font-size:var(--text-xs);color:var(--color-text-soft)}
+
+  /* ───────── 버튼: 올리면 떠오르고, 누르면 눌림 ───────── */
+  .btn{
+    position:relative;isolation:isolate;
+    display:inline-flex;align-items:center;justify-content:center;gap:var(--space-1);
+    min-height:var(--size-tap);padding:0 var(--space-3);
+    font:inherit;font-weight:600;font-size:var(--text-sm);text-decoration:none;cursor:pointer;
+    background:var(--color-text);color:var(--color-on-dark);
+    border:var(--border-mid) solid var(--color-text);border-radius:var(--radius-pill);
+    transition:translate var(--dur-hover-out) var(--ease-hover), scale var(--dur-press) var(--ease-out-quint);
+  }
+  /* 그림자는 미리 그려 두고 투명도만 바꿔요 */
+  .btn::after{
+    content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;
+    box-shadow:0 var(--space-1) var(--space-2) var(--color-shadow-soft);
+    opacity:0;transition:opacity var(--dur-hover-out) var(--ease-hover);
+  }
+  .btn.ghost{background:transparent;color:var(--color-text)}
+  @media (hover:hover){
+    .btn:hover{translate:0 var(--lift);transition-duration:var(--dur-hover),var(--dur-press)}
+    .btn:hover::after{opacity:1;transition-duration:var(--dur-hover)}
+  }
+  .btn:active{translate:0 0;scale:var(--press)}
+  .btn:active::after{opacity:0}
+
+  .info{display:grid;grid-template-columns:var(--size-time-col) 1fr;gap:var(--space-1) var(--space-2)}
+  .info dt{font-size:var(--text-xs);color:var(--color-text-soft);padding-top:var(--border-hair)}
+
+  .map-link{
+    display:inline-block;margin-top:var(--space-1);font-weight:600;font-size:var(--text-sm);
+    text-decoration:underline;text-decoration-color:var(--color-marker);text-decoration-thickness:var(--border-bold);text-underline-offset:var(--space-half);
+    transition:opacity var(--dur-hover-out) var(--ease-hover);
+  }
+  .map-link:hover{opacity:.7;transition-duration:var(--dur-hover)}
+  .map-link:active{opacity:.5}
+
+  /* ───────── 오늘의 빵 카드: 스크롤하면 차례로 ───────── */
+  .today{margin-top:var(--space-12)}
+  .today h2{font-size:var(--text-xl);font-weight:800;letter-spacing:-.02em;line-height:1.2}
+  .today > p{margin:var(--space-1) 0 var(--space-4);color:var(--color-text-soft);max-width:var(--size-measure)}
+  .cards{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-3)}
+  .card{
+    background:var(--color-paper);border-radius:var(--radius-paper);
+    padding:var(--space-3);
+    box-shadow:0 var(--border-hair) 0 var(--color-bench-line), 0 var(--space-1) var(--space-3) calc(var(--space-2) * -1) var(--color-shadow);
+    display:flex;flex-direction:column;gap:var(--space-1);
+    rotate:var(--tilt,0deg);
+  }
+  .card:nth-child(odd){--tilt:-.5deg}
+  .card:nth-child(3n){--tilt:.6deg}
+  .card h3{font-size:var(--text-md);font-weight:800}
+  .card p{font-size:var(--text-xs);color:var(--color-text-soft);flex:1}
+  .card .price{font-weight:800;font-size:var(--text-md);font-variant-numeric:tabular-nums}
+  .card .when{font-family:var(--font-hand);font-size:var(--text-hand-sm);color:var(--color-marker);line-height:var(--leading-none)}
+
+  /* 자바스크립트가 켜졌을 때만 숨겼다가 보여 줘요 */
+  .js .card{opacity:0;translate:0 var(--rise)}
+  .js .card.in{
+    opacity:1;translate:0 0;
+    transition:opacity var(--dur-reveal) var(--ease-out-quint), translate var(--dur-reveal) var(--ease-out-quint);
+    transition-delay:calc(var(--i, 0) * var(--dur-stagger));
+  }
+
+  /* ───────── 예약 완료 알림 ───────── */
+  .toast{
+    position:fixed;left:50%;bottom:var(--space-3);z-index:10;
+    width:min(calc(100% - var(--space-4)), var(--size-toast));
+    display:flex;gap:var(--space-2);align-items:flex-start;
+    padding:var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+    background:var(--color-text);color:var(--color-on-dark);border-radius:var(--radius-field);
+    box-shadow:0 var(--space-2) var(--space-4) var(--color-shadow);
+    /* 사라질 때: 짧게, 가속하며 */
+    opacity:0;translate:-50% var(--rise);scale:.98;pointer-events:none;
+    transition:opacity var(--dur-exit) var(--ease-in-cubic), translate var(--dur-exit) var(--ease-in-cubic), scale var(--dur-exit) var(--ease-in-cubic);
+  }
+  .toast.show{
+    /* 나타날 때: 조금 길게, 감속하며 */
+    opacity:1;translate:-50% 0;scale:1;pointer-events:auto;
+    transition-duration:var(--dur-enter);transition-timing-function:var(--ease-out-quint);
+  }
+  .toast .tick{color:var(--color-fresh);font-weight:800;font-size:var(--text-md);line-height:var(--leading-body)}
+  .toast p{flex:1;font-size:var(--text-sm)}
+  .toast p b{display:block}
+  .toast button{
+    flex:none;width:var(--size-tap);height:var(--size-tap);margin:calc(var(--space-1) * -1) calc(var(--space-1) * -1) 0 0;
+    background:none;border:0;color:inherit;font:inherit;font-size:var(--text-md);cursor:pointer;border-radius:var(--radius-field);
+    opacity:.7;transition:opacity var(--dur-hover-out) var(--ease-hover);
+  }
+  .toast button:hover{opacity:1;transition-duration:var(--dur-hover)}
+  .toast button:active{scale:var(--press)}
+
+  footer{margin-top:var(--space-10);padding-top:var(--space-3);border-top:var(--border-hair) solid var(--color-bench-line);font-size:var(--text-xs);color:var(--color-text-soft);max-width:var(--size-measure)}
+
+  /* ───────── 모션 줄이기: 움직임은 빼고 투명도 변화만 짧게 ───────── */
+  @media (prefers-reduced-motion:reduce){
+    :root{--lift:0px;--press:1;--rise:0px;--dur-stagger:0ms;--dur-reveal:120ms;--dur-enter:120ms;--dur-exit:100ms}
+    .now i{animation:none;transform:none}
+    .btn:active{opacity:.8}
+    .toast,.toast.show{scale:1}
+  }
+
+  /* 넓은 화면: 오른쪽 칸이 스크롤을 따라와서 아래 빈자리가 생기지 않게 */
+  @media (min-width:881px){
+    .side{position:sticky;top:var(--space-4)}
+  }
+  @media (max-width:880px){
+    .layout{grid-template-columns:1fr;gap:var(--space-8)}
+    .sheet{transform:none}
+  }
+  /* 태블릿: 예약 양식과 찾아오는 길을 나란히 */
+  @media (min-width:521px) and (max-width:880px){
+    .side{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-5)}
+  }
+  @media (max-width:520px){
+    .bench{padding:var(--space-3) var(--space-2) var(--space-8)}
+    .sheet{padding:var(--space-6) var(--space-2) var(--space-3)}
+    .clip{left:var(--space-2)}
+    .batch{grid-template-columns:var(--size-time-col-sm) 1fr auto;row-gap:0}
+    .batch.fresh .state,.batch.next .state{grid-column:2 / -1;font-size:var(--text-hand-sm)}
+    .sheet-head{flex-direction:column;gap:0}
+    .order{grid-template-columns:1fr}
+    /* 찾아오는 길: 이름표를 위로 */
+    .info{grid-template-columns:1fr;row-gap:0}
+    .info dd{margin-bottom:var(--space-2)}
+    /* 오늘의 빵: 이름과 가격을 한 줄에 둔 납작한 카드 */
+    .cards{grid-template-columns:1fr;gap:var(--space-2)}
+    .card{
+      display:grid;grid-template-columns:1fr auto;column-gap:var(--space-2);row-gap:var(--space-half);
+      padding:var(--space-2);
+    }
+    .card h3{grid-column:1;grid-row:1}
+    .card .price{grid-column:2;grid-row:1;text-align:right}
+    .card p{grid-column:1 / -1}
+    .card .when{grid-column:1 / -1}
+  }
+</style>
+</head>
+<body>
+<div class="hero-bg" aria-hidden="true"></div>
+<div class="bench">
+
+  <header class="top">
+    <a class="name" href="#">모닝브레드</a>
+    <p class="open" id="open"><b>화요일부터 일요일까지</b>, 아침 7시부터 저녁 8시까지 열어요</p>
+  </header>
+
+  <div class="layout">
+    <main>
+      <section class="sheet" aria-labelledby="sheet-title">
+        <span class="clip" aria-hidden="true"></span>
+        <div class="sheet-head">
+          <strong id="sheet-title">오늘의 오븐 시간표</strong>
+          <span id="date">11월 13일 금요일</span>
+        </div>
+
+        <p class="note" id="note">오늘도 새벽 4시에 반죽했어요</p>
+
+        <ol class="batches" id="batches">
+          <li class="batch" data-t="07:00"><time>07:00</time><span class="what">버터 소금빵, 크루아상</span><span class="state"></span></li>
+          <li class="batch" data-t="08:30"><time>08:30</time><span class="what">우유 식빵</span><span class="state"></span></li>
+          <li class="batch" data-t="10:00"><time>10:00</time><span class="what">앙버터, 단팥빵</span><span class="state"></span></li>
+          <li class="batch" data-t="11:00"><time>11:00</time><span class="what">버터 소금빵 두 번째 판</span><span class="state"></span></li>
+          <li class="batch" data-t="12:00"><time>12:00</time><span class="what">무화과 캄파뉴</span><span class="state"></span></li>
+          <li class="batch" data-t="15:00"><time>15:00</time><span class="what">버터 소금빵 세 번째 판, 쑥 크림치즈</span><span class="state"></span></li>
+          <li class="batch" data-t="17:00"><time>17:00</time><span class="what">바게트</span><span class="state"></span></li>
+        </ol>
+
+        <p class="sheet-foot">나오는 시간은 오븐 사정에 따라 10분쯤 달라질 수 있어요. 인기 빵은 나오고 한 시간 안에 다 팔릴 때가 많아요.</p>
+      </section>
+    </main>
+
+    <aside class="side">
+      <section aria-labelledby="order-title">
+        <h2 id="order-title">미리 맡겨 두세요</h2>
+        <p>원하는 빵과 시간을 고르면 구워서 이름 붙여 둘게요.</p>
+        <form class="order" id="order">
+          <div class="field wide">
+            <label for="o-bread">빵</label>
+            <select id="o-bread" name="bread">
+              <option>버터 소금빵</option>
+              <option>크루아상</option>
+              <option>앙버터</option>
+              <option>우유 식빵</option>
+              <option>무화과 캄파뉴</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="o-count">개수</label>
+            <input id="o-count" name="count" type="number" min="1" max="20" value="2" required>
+          </div>
+          <div class="field">
+            <label for="o-time">찾으러 올 시간</label>
+            <select id="o-time" name="time">
+              <option value="8">오전 8시</option>
+              <option value="10">오전 10시</option>
+              <option value="12">낮 12시</option>
+              <option value="15">오후 3시</option>
+              <option value="18">오후 6시</option>
+            </select>
+          </div>
+          <div class="field wide">
+            <label for="o-name">이름</label>
+            <input id="o-name" name="name" type="text" autocomplete="name" placeholder="찾으러 올 때 말할 이름" required>
+          </div>
+          <div class="actions">
+            <button class="btn" type="submit">맡겨 두기</button>
+            <a class="btn ghost" href="tel:0212345678">전화로 맡기기</a>
+          </div>
+          <p class="order-note">연습용 페이지라서 예약이 가게로 전달되지 않아요.</p>
+        </form>
+      </section>
+
+      <section>
+        <h2>찾아오는 길</h2>
+        <dl class="info">
+          <dt>주소</dt><dd>서울시 ○○구 햇살로 12, 1층<br><span class="muted">○○역 2번 출구에서 걸어서 3분</span></dd>
+          <dt>여는 시간</dt><dd>화요일부터 일요일, 07:00–20:00<br><span class="muted">월요일은 쉬어요</span></dd>
+          <dt>주차</dt><dd>가게 앞에 2대</dd>
+        </dl>
+        <a class="map-link" href="#">지도에서 보기</a>
+      </section>
+    </aside>
+  </div>
+
+  <section class="today" aria-labelledby="today-title">
+    <h2 id="today-title">오늘의 빵</h2>
+    <p>시간표에 나온 빵은 문 닫을 때까지 진열대에 있어요. 다 팔리면 그날은 끝이에요.</p>
+    <ul class="cards">
+      <li class="card"><h3>버터 소금빵</h3><p>고메 버터를 말아 겉은 바삭하게</p><span class="when">7시, 11시, 오후 3시</span><span class="price">2,800원</span></li>
+      <li class="card"><h3>크루아상</h3><p>사흘 숙성한 반죽을 27겹으로</p><span class="when">7시</span><span class="price">3,900원</span></li>
+      <li class="card"><h3>앙버터</h3><p>직접 쑨 팥앙금과 버터 한 장</p><span class="when">10시</span><span class="price">4,200원</span></li>
+      <li class="card"><h3>우유 식빵</h3><p>국산 우유로만 반죽해요</p><span class="when">8시 반</span><span class="price">5,500원</span></li>
+      <li class="card"><h3>무화과 캄파뉴</h3><p>반 덩이도 팔아요</p><span class="when">12시</span><span class="price">7,800원</span></li>
+      <li class="card"><h3>바게트</h3><p>저녁 식탁용으로 늦게 구워요</p><span class="when">오후 5시</span><span class="price">4,500원</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    그날 구운 빵은 그날 팔아요. 남은 빵은 저녁 8시에 동네 지역아동센터로 보내요.
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="tick" aria-hidden="true">✓</span>
+  <p id="toast-text"></p>
+  <button type="button" id="toast-close" aria-label="알림 닫기">✕</button>
+</div>
+
+<script>
+document.documentElement.classList.add('js');
+
+/* ── 오븐 시간표 ── */
+(function(){
+  const OPEN = 7*60, CLOSE = 20*60, FRESH_MIN = 40;
+  const days = ['일','월','화','수','목','금','토'];
+  const now = new Date();
+  const mins = now.getHours()*60 + now.getMinutes();
+  const pad = n => String(n).padStart(2,'0');
+  const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+  const label = m => { const h = Math.floor(m/60); return `${h > 12 ? '오후 '+(h-12) : h}시${m%60 ? ' '+(m%60)+'분' : ''}`; };
+
+  document.getElementById('date').textContent = `${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+
+  const isMonday = now.getDay() === 1;
+  const isOpen = !isMonday && mins >= OPEN && mins < CLOSE;
+  const openEl = document.getElementById('open');
+  const note = document.getElementById('note');
+
+  if (isMonday) { openEl.innerHTML = '<b>오늘은 쉬어요</b>. 내일 아침 7시에 문 열어요'; note.textContent = '월요일은 오븐도 쉬어요'; return; }
+  if (mins < OPEN) { openEl.innerHTML = '<b>아침 7시에 문 열어요</b>'; note.textContent = '지금 반죽 중이에요. 7시에 첫 빵이 나와요'; return; }
+  if (mins >= CLOSE) { openEl.innerHTML = '<b>오늘은 문 닫았어요</b>. 내일 아침 7시에 만나요'; note.textContent = '오늘 빵은 다 나갔어요. 내일 7시에 첫 빵이 나와요'; }
+  else { openEl.innerHTML = '<b>지금 열었어요</b>, 저녁 8시까지'; }
+
+  const rows = [...document.querySelectorAll('.batch')];
+  let firstFuture = null, fresh = null;
+  rows.forEach(r => {
+    const t = toMin(r.dataset.t), st = r.querySelector('.state');
+    if (t <= mins) {
+      if (mins - t < FRESH_MIN && isOpen) { r.classList.add('fresh'); st.textContent = '방금 나왔어요'; fresh = r; }
+      else { r.classList.add('done'); st.innerHTML = '<span class="sr">나왔어요</span>'; }
+    } else if (!firstFuture) {
+      firstFuture = r; r.classList.add('next');
+      const left = t - mins;
+      st.textContent = left < 60 ? `${left}분 뒤에 나와요` : `${label(t)}에 나와요`;
+    }
+  });
+  if (!isOpen) return;
+
+  const line = document.createElement('li');
+  line.className = 'now'; line.setAttribute('aria-hidden','true');
+  line.innerHTML = `<span>지금 ${pad(now.getHours())}:${pad(now.getMinutes())}</span><i></i>`;
+  const list = document.getElementById('batches');
+  firstFuture ? list.insertBefore(line, firstFuture) : list.appendChild(line);
+
+  const name = r => r.querySelector('.what').textContent.replace(/ (두|세) 번째 판/,'').split(',')[0];
+  if (fresh) note.textContent = `${label(toMin(fresh.dataset.t))} ${name(fresh)} 방금 나왔어요`;
+  else if (firstFuture) note.textContent = `다음은 ${label(toMin(firstFuture.dataset.t))} ${name(firstFuture)}예요`;
+  else note.textContent = '오늘 마지막 빵까지 다 구웠어요';
+})();
+
+/* ── 오늘의 빵 카드: 화면에 들어오면 차례로 ── */
+(function(){
+  const cards = [...document.querySelectorAll('.card')];
+  if (!('IntersectionObserver' in window)) { cards.forEach(c => c.classList.add('in')); return; }
+  const io = new IntersectionObserver(entries => {
+    const coming = entries.filter(e => e.isIntersecting);
+    coming.forEach((e, i) => {
+      e.target.style.setProperty('--i', i);   // 같이 들어온 카드끼리만 순서를 매겨요
+      e.target.classList.add('in');
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.2 });
+  cards.forEach(c => io.observe(c));
+})();
+
+/* ── 예약 완료 알림: 나타났다가 사라지기 ── */
+(function(){
+  const form = document.getElementById('order');
+  const toast = document.getElementById('toast');
+  const text = document.getElementById('toast-text');
+  const close = document.getElementById('toast-close');
+  const days = ['일','월','화','수','목','금','토'];
+  let timer;
+
+  const hourLabel = h => h < 12 ? `오전 ${h}시` : h === 12 ? '낮 12시' : `오후 ${h-12}시`;
+  function pickupDay(){
+    const d = new Date(); d.setDate(d.getDate()+1);
+    if (d.getDay() === 1) d.setDate(d.getDate()+1);    // 월요일은 쉬어요
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    return d.toDateString() === tomorrow.toDateString() ? '내일' : `${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
+  }
+  function hide(){
+    toast.classList.remove('show');
+    clearTimeout(timer);
+  }
+  function show(msg){
+    text.innerHTML = msg;
+    toast.classList.remove('show');
+    void toast.offsetWidth;                // 연달아 눌러도 처음부터 다시 나타나게
+    toast.classList.add('show');
+    clearTimeout(timer);
+    timer = setTimeout(hide, 4500);
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const who = String(f.get('name')).trim();
+    show(`<b>맡겨 두었어요</b>${pickupDay()} ${hourLabel(Number(f.get('time')))}에 ${f.get('bread')} ${f.get('count')}개를 ${who.replace(/[<>&]/g,'')} 님 이름으로 둘게요.`);
+  });
+  close.addEventListener('click', hide);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+})();
+</script>
+</body>
+</html>

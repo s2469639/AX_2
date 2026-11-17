@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<!--
+    Built from .claude/skills/algorithmic-art/templates/viewer.html
+    Fixed: layout, sidebar, seed controls, actions.
+    Variable: algorithm "Suspended Light", parameters, version presets.
+-->
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suspended Light · 모닝브레드 히어로 배경</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&family=Gothic+A1:wght@800&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <style>
+        /* Anthropic Brand Colors */
+        :root {
+            --anthropic-dark: #141413;
+            --anthropic-light: #faf9f5;
+            --anthropic-mid-gray: #b0aea5;
+            --anthropic-light-gray: #e8e6dc;
+            --anthropic-orange: #d97757;
+            --anthropic-blue: #6a9bcc;
+            --anthropic-green: #788c5d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
+            min-height: 100vh;
+            color: var(--anthropic-dark);
+        }
+        .container { display: flex; min-height: 100vh; padding: 20px; gap: 20px; }
+        .sidebar {
+            width: 320px; flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            padding: 24px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(20, 20, 19, 0.1);
+            overflow-y: auto; overflow-x: hidden;
+        }
+        .sidebar h1 { font-family: 'Lora', serif; font-size: 24px; font-weight: 500; color: var(--anthropic-dark); margin-bottom: 8px; }
+        .sidebar .subtitle { color: var(--anthropic-mid-gray); font-size: 14px; margin-bottom: 32px; line-height: 1.4; }
+        .control-section { margin-bottom: 32px; }
+        .control-section h2 { font-size: 16px; font-weight: 600; color: var(--anthropic-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .control-section h2::before { content: '•'; color: var(--anthropic-orange); font-weight: bold; }
+        .seed-input {
+            width: 100%; background: var(--anthropic-light); padding: 12px; border-radius: 8px;
+            font-family: 'Courier New', monospace; font-size: 14px; margin-bottom: 12px;
+            border: 1px solid var(--anthropic-light-gray); text-align: center;
+        }
+        .seed-input:focus { outline: none; border-color: var(--anthropic-orange); box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.1); background: white; }
+        .seed-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .regen-button { margin-bottom: 0; }
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; font-size: 14px; font-weight: 500; color: var(--anthropic-dark); margin-bottom: 8px; }
+        .slider-container { display: flex; align-items: center; gap: 12px; }
+        .slider-container input[type="range"] { flex: 1; height: 4px; background: var(--anthropic-light-gray); border-radius: 2px; outline: none; -webkit-appearance: none; }
+        .slider-container input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--anthropic-orange); border-radius: 50%; cursor: pointer; transition: all 0.2s ease; }
+        .slider-container input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); background: #c86641; }
+        .slider-container input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; background: var(--anthropic-orange); border-radius: 50%; border: none; cursor: pointer; transition: all 0.2s ease; }
+        .value-display { font-family: 'Courier New', monospace; font-size: 12px; color: var(--anthropic-mid-gray); min-width: 60px; text-align: right; }
+        .button {
+            background: var(--anthropic-orange); color: white; border: none; padding: 10px 16px; border-radius: 6px;
+            font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; width: 100%;
+        }
+        .button:hover { background: #c86641; transform: translateY(-1px); }
+        .button:active { transform: translateY(0); }
+        .button.secondary { background: var(--anthropic-blue); }
+        .button.secondary:hover { background: #5a8bb8; }
+        .button.tertiary { background: var(--anthropic-green); }
+        .button.tertiary:hover { background: #6b7b52; }
+        .button-row { display: flex; gap: 8px; }
+        .button-row .button { flex: 1; }
+        .button.version { background: var(--anthropic-light); color: var(--anthropic-dark); border: 1px solid var(--anthropic-light-gray); text-align: left; margin-bottom: 8px; }
+        .button.version.active { border-color: var(--anthropic-orange); box-shadow: inset 3px 0 0 var(--anthropic-orange); }
+        .button.version small { display: block; color: var(--anthropic-mid-gray); font-size: 12px; }
+        .check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+        .canvas-area { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; }
+        #canvas-container {
+            position: relative; width: 100%; max-width: 1100px; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 20px 40px rgba(20, 20, 19, 0.1); background: white;
+        }
+        #canvas-container canvas { display: block; width: 100% !important; height: auto !important; }
+        /* 글자 겹쳐 보기 (읽기 쉬운지 확인용) */
+        #text-preview {
+            position: absolute; inset: 0; padding: 6% 7%; pointer-events: none; display: none;
+            color: #4a403a; font-family: 'Gothic A1', sans-serif;
+        }
+        #text-preview.on { display: block; }
+        #text-preview .b { font-weight: 800; font-size: clamp(14px, 1.8vw, 22px); }
+        #text-preview .h { font-family: 'Nanum Pen Script', cursive; color: #c1666b; font-size: clamp(36px, 6vw, 84px); line-height: 1; margin-top: 6%; }
+        #text-preview .t { font-weight: 800; font-size: clamp(16px, 2.4vw, 32px); margin-top: 2%; }
+        .loading { display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--anthropic-mid-gray); padding: 80px 0; }
+        @media (max-width: 600px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .canvas-area { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>Suspended Light</h1>
+            <div class="subtitle">모닝브레드 히어로 배경. 아침 햇살 속에서만 보이는 밀가루 입자.</div>
+
+            <!-- Seed Section (ALWAYS KEEP THIS) -->
+            <div class="control-section">
+                <h2>Seed</h2>
+                <input type="number" id="seed-input" class="seed-input" value="12345" onchange="updateSeed()">
+                <div class="seed-controls">
+                    <button class="button secondary" onclick="previousSeed()">← Prev</button>
+                    <button class="button secondary" onclick="nextSeed()">Next →</button>
+                </div>
+                <button class="button tertiary regen-button" onclick="randomSeedAndUpdate()">↻ Random</button>
+            </div>
+
+            <!-- Versions (presets) -->
+            <div class="control-section">
+                <h2>Versions</h2>
+                <button class="button version" data-v="1" onclick="applyVersion(1)">A. 햇살 줄기<small>빛줄기 안의 입자만 반짝여요</small></button>
+                <button class="button version" data-v="2" onclick="applyVersion(2)">B. 느린 흩날림<small>입자가 아래로 천천히 흘러요</small></button>
+                <button class="button version" data-v="3" onclick="applyVersion(3)">C. 체에 친 밀가루<small>햇살 쪽으로 고운 점이 모여요</small></button>
+                <label class="check"><input type="checkbox" id="preview-toggle" onchange="togglePreview(this.checked)"> 글자 겹쳐 보기</label>
+            </div>
+
+            <!-- Parameters Section -->
+            <div class="control-section">
+                <h2>Parameters</h2>
+                <div class="control-group">
+                    <label>입자 수</label>
+                    <div class="slider-container">
+                        <input type="range" id="moteCount" min="500" max="12000" step="250" value="4000" oninput="updateParam('moteCount', this.value)">
+                        <span class="value-display" id="moteCount-value">4000</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>진하기 (낮을수록 글자가 잘 읽혀요)</label>
+                    <div class="slider-container">
+                        <input type="range" id="intensity" min="0.2" max="1.5" step="0.05" value="0.8" oninput="updateParam('intensity', this.value)">
+                        <span class="value-display" id="intensity-value">0.8</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>햇살 위치 (가로)</label>
+                    <div class="slider-container">
+                        <input type="range" id="sunX" min="0" max="1" step="0.05" value="0.85" oninput="updateParam('sunX', this.value)">
+                        <span class="value-display" id="sunX-value">0.85</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>빛줄기 수</label>
+                    <div class="slider-container">
+                        <input type="range" id="beams" min="0" max="9" step="1" value="5" oninput="updateParam('beams', this.value)">
+                        <span class="value-display" id="beams-value">5</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>흩날림 (초점 나간 가루 크기)</label>
+                    <div class="slider-container">
+                        <input type="range" id="drift" min="0" max="60" step="2" value="0" oninput="updateParam('drift', this.value)">
+                        <span class="value-display" id="drift-value">0</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>뭉침 정도</label>
+                    <div class="slider-container">
+                        <input type="range" id="clump" min="0" max="1" step="0.05" value="0.3" oninput="updateParam('clump', this.value)">
+                        <span class="value-display" id="clump-value">0.3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Section (ALWAYS KEEP THIS) -->
+            <div class="control-section">
+                <h2>Actions</h2>
+                <div class="button-row">
+                    <button class="button" onclick="initializeSystem()">Regenerate</button>
+                    <button class="button" onclick="resetParameters()">Reset</button>
+                </div>
+                <div class="button-row" style="margin-top:8px">
+                    <button class="button secondary" onclick="saveCanvas('morningbread-hero-' + params.seed, 'png')">Download PNG</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <div id="canvas-container">
+                <div class="loading">Initializing generative art...</div>
+                <div id="text-preview"><div class="b">모닝브레드</div><div class="h">12시 무화과 캄파뉴 방금 나왔어요</div><div class="t">오늘의 오븐 시간표</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // PARAMETERS
+        // ═══════════════════════════════════════════════════════════
+        // 색은 after/skill.html 의 Golden Hour 토큰
+        const C = {
+            bench: [212, 184, 150],   // --gh-beige
+            cream: [251, 245, 234],   // --gh-cream
+            mustard: [244, 169, 0],   // --gh-mustard
+            terracotta: [193, 102, 107], // --gh-terracotta
+        };
+        const W = 1600, H = 800;   // 히어로는 가로로 긴 띠라서 2:1
+
+        const VERSIONS = {
+            1: { seed: 7,    moteCount: 5000,  intensity: 0.8, sunX: 0.85, beams: 6, drift: 0,  clump: 0.1 },
+            2: { seed: 42,   moteCount: 2600,  intensity: 1.3, sunX: 0.9,  beams: 0, drift: 36, clump: 0.15 },
+            3: { seed: 1104, moteCount: 26000, intensity: 1.1, sunX: 0.8,  beams: 0, drift: 0,  clump: 0.75 },
+        };
+        let version = 1;
+        let params = { ...VERSIONS[1] };
+        let defaultParams = { ...params };
+
+        // ═══════════════════════════════════════════════════════════
+        // ALGORITHM: Suspended Light
+        // ═══════════════════════════════════════════════════════════
+        let sun, beamList = [];
+
+        function setup() {
+            pixelDensity(1);
+            const canvas = createCanvas(W, H);
+            canvas.parent('canvas-container');
+            noLoop();
+            const ld = document.querySelector('.loading'); if (ld) ld.style.display = 'none';
+            markVersion();
+            initializeSystem();
+        }
+
+        function initializeSystem() {
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
+            sun = createVector(params.sunX * W, -H * 0.35);
+            // 빛줄기: 각도, 폭, 세기를 씨앗에서 한 번만 뽑아요
+            beamList = [];
+            const base = atan2(H * 0.9 - sun.y, (params.sunX < 0.5 ? W * 0.8 : W * 0.2) - sun.x);
+            for (let i = 0; i < params.beams; i++) {
+                beamList.push({
+                    a: base + random(-0.42, 0.42),
+                    w: random(0.018, 0.06),          // 반각(라디안)
+                    s: random(0.45, 1),              // 세기
+                });
+            }
+            redraw();
+        }
+
+        // 빛 세기: 빛줄기 중심선에서 멀수록, 햇살에서 멀수록 부드럽게 줄어요
+        function lightAt(x, y) {
+            const dx = x - sun.x, dy = y - sun.y;
+            const d = sqrt(dx * dx + dy * dy);
+            const ang = atan2(dy, dx);
+            const fall = constrain(1 - (d - H * 0.35) / (W * 1.1), 0, 1);
+            let beam = 0;
+            for (const b of beamList) {
+                const t = abs(ang - b.a) / b.w;
+                if (t < 1) beam = max(beam, b.s * (1 - t * t));   // 가장자리는 녹아 없어지게
+            }
+            const ambient = 0.18 + 0.32 * fall * fall;
+            return constrain(ambient + beam * fall * 0.9, 0, 1);
+        }
+
+        function draw() {
+            const ctx = drawingContext;
+            const I = params.intensity;
+            // ?export=1 이면 바탕색과 나뭇결 없이 빛과 입자만 (페이지 배경 위에 얹는 용도)
+            const EXPORT = new URLSearchParams(location.search).get('export') === '1';
+            if (EXPORT) clear(); else background(...C.bench);
+
+            // 1) 햇살 자리의 따뜻한 빛무리
+            let g = ctx.createRadialGradient(sun.x, sun.y, 0, sun.x, sun.y, W * 0.85);
+            g.addColorStop(0, `rgba(251,245,234,${0.55 * I})`);
+            g.addColorStop(0.35, `rgba(244,169,0,${0.07 * I})`);
+            g.addColorStop(1, 'rgba(212,184,150,0)');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+            // 2) 빛줄기 (부드러운 쐐기)
+            for (const b of beamList) {
+                const len = W * 1.6;
+                const p1 = { x: sun.x + cos(b.a - b.w) * len, y: sun.y + sin(b.a - b.w) * len };
+                const p2 = { x: sun.x + cos(b.a + b.w) * len, y: sun.y + sin(b.a + b.w) * len };
+                const lg = ctx.createLinearGradient(sun.x, sun.y, sun.x + cos(b.a) * len * 0.7, sun.y + sin(b.a) * len * 0.7);
+                lg.addColorStop(0, `rgba(251,245,234,${0.22 * b.s * I})`);
+                lg.addColorStop(1, 'rgba(251,245,234,0)');
+                ctx.fillStyle = lg;
+                ctx.beginPath(); ctx.moveTo(sun.x, sun.y); ctx.lineTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.closePath(); ctx.fill();
+            }
+
+            // 3) 입자: 어디에나 있지만, 빛을 받은 만큼만 보여요
+            const ns = 0.0016;
+            const prevail = atan2(1, sun.x > W / 2 ? -0.35 : 0.35);  // 햇살 반대쪽 아래로 기울어요
+            noStroke();
+            for (let i = 0; i < params.moteCount; i++) {
+                let x = random(W), y = random(H);
+                // 뭉침: 노이즈가 낮은 곳의 입자는 버려서 결이 생기게
+                const n = noise(x * ns * 1.6, y * ns * 1.6);
+                const L = lightAt(x, y);
+                // 뭉침: 노이즈 결을 따라 남기고, 뭉침이 클수록 햇살 가까이에 더 쌓여요
+                let keep = pow(constrain((n - 0.25) / 0.5, 0, 1), params.clump * 2.2);
+                keep *= lerp(1, constrain(L * 1.8, 0, 1), params.clump);
+                if (random() > keep) continue;
+                const toasted = random() < 0.02;
+                const col = toasted ? C.terracotta : C.cream;
+                const r = random() < 0.08 ? random(1.6, 2.6) : random(0.5, 1.4);
+                const a = (toasted ? 0.35 : 0.85) * L * I * random(0.35, 1);
+
+                // 흩날림: 꼬리 대신 '초점 나간 가루'. 가까운(앞쪽) 입자일수록 크고 흐리고 옅어요.
+                // 흐름 방향으로 살짝 길쭉하게 늘려 천천히 내려앉는 느낌만 남겨요.
+                if (params.drift > 0) {
+                    const depth = pow(random(), 3);
+                    const br = 1.2 + depth * params.drift * 0.4;
+                    const ba = a * (1 - depth * 0.7) * (depth > 0.2 ? 0.55 : 1);
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(prevail - HALF_PI + (noise(x * ns, y * ns, 3.1) - 0.5) * 0.8);
+                    ctx.scale(1, 1 + depth * 0.6);
+                    const bg = ctx.createRadialGradient(0, 0, 0, 0, 0, br);
+                    bg.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},${ba})`);
+                    bg.addColorStop(0.55, `rgba(${col[0]},${col[1]},${col[2]},${ba * 0.5})`);
+                    bg.addColorStop(1, `rgba(${col[0]},${col[1]},${col[2]},0)`);
+                    ctx.fillStyle = bg;
+                    ctx.beginPath(); ctx.arc(0, 0, br, 0, TWO_PI); ctx.fill();
+                    ctx.restore();
+                    continue;
+                }
+
+                // 큰 입자는 살짝 번진 테두리
+                if (r > 1.5) { fill(col[0], col[1], col[2], 255 * a * 0.25); circle(x, y, r * 3.2); }
+                fill(col[0], col[1], col[2], 255 * a);
+                circle(x, y, r * 2);
+            }
+
+            // 4) 아주 옅은 나뭇결 (페이지 배경과 이어지게)
+            if (!EXPORT) {
+                stroke(255, 255, 255, 255 * 0.05);
+                strokeWeight(1);
+                for (let y = 0.5; y < H; y += 8) line(0, y, W, y);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // UI
+        // ═══════════════════════════════════════════════════════════
+        const SLIDERS = ['moteCount', 'intensity', 'sunX', 'beams', 'drift', 'clump'];
+        function syncUI() {
+            for (const k of SLIDERS) {
+                document.getElementById(k).value = params[k];
+                document.getElementById(k + '-value').textContent = params[k];
+            }
+            updateSeedDisplay();
+        }
+        function updateParam(name, value) {
+            params[name] = Number(value);
+            document.getElementById(name + '-value').textContent = value;
+            initializeSystem();
+        }
+        function updateColor() {}
+        function applyVersion(v) {
+            version = v;
+            params = { ...VERSIONS[v] };
+            defaultParams = { ...params };
+            markVersion(); syncUI(); initializeSystem();
+        }
+        function markVersion() {
+            document.querySelectorAll('.button.version').forEach(b => b.classList.toggle('active', Number(b.dataset.v) === version));
+        }
+        function togglePreview(on) { document.getElementById('text-preview').classList.toggle('on', on); }
+
+        // ═══════════════════════════════════════════════════════════
+        // SEED CONTROL FUNCTIONS - ALWAYS KEEP THESE
+        // ═══════════════════════════════════════════════════════════
+        function updateSeedDisplay() { document.getElementById('seed-input').value = params.seed; }
+        function updateSeed() {
+            let input = document.getElementById('seed-input');
+            let newSeed = parseInt(input.value);
+            if (newSeed && newSeed > 0) { params.seed = newSeed; initializeSystem(); }
+            else { updateSeedDisplay(); }
+        }
+        function previousSeed() { params.seed = Math.max(1, params.seed - 1); updateSeedDisplay(); initializeSystem(); }
+        function nextSeed() { params.seed = params.seed + 1; updateSeedDisplay(); initializeSystem(); }
+        function randomSeedAndUpdate() { params.seed = Math.floor(Math.random() * 999999) + 1; updateSeedDisplay(); initializeSystem(); }
+        function resetParameters() { params = { ...defaultParams }; syncUI(); initializeSystem(); }
+
+        window.addEventListener('load', function () {
+            const v = Number(new URLSearchParams(location.search).get('v'));
+            if (VERSIONS[v]) applyVersion(v); else syncUI();
+            if (new URLSearchParams(location.search).get('text') === '1') {
+                document.getElementById('preview-toggle').checked = true; togglePreview(true);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+문의번호,접수일,바이어회사,바이어국가,담당자이메일,상품명,상품단가USD,수량,상태
+1,2026-11-02,(가상) Sunrise Trading,베트남,kim@sunrise.example,샘플 상품 A,12,500,신규
+2,2026-11-03,(가상) Sunrise Trading,베트남,kim@sunrise.example,샘플 상품 B,30,100,견적발송
+3,2026-11-05,(가상) Nordic Home,스웨덴,anna@nordic.example,샘플 상품 A,12,1200,신규
+4,2026-11-06,(가상) Sunrise Trading,베트남,kim@sunrise.example,샘플 상품 A,13,300,신규
+5,2026-11-07,(가상) Nordic Home,스웨덴,anna@nordic.example,샘플 상품 C,8,2000,계약

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>(가상) 견적 계산기 — 버그 3개 숨어 있음</title>
+<style>
+  body { font-family: sans-serif; padding: 40px; background: #f3f4f6; }
+  .box { background: white; padding: 24px; border-radius: 12px; max-width: 420px; }
+  input { width: 100%; padding: 8px; margin: 6px 0 12px; box-sizing: border-box; }
+  button { background: #2563eb; color: white; border: 0; padding: 10px 16px; border-radius: 8px; }
+  #result { margin-top: 16px; font-size: 20px; font-weight: bold; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <h2>(가상) 견적 계산기</h2>
+    <label>단가 (USD)</label>
+    <input id="price" type="number" value="12">
+    <label>수량</label>
+    <input id="qty" type="number" value="500">
+    <button onclick="calculate()">견적 계산</button>
+    <div id="result"></div>
+  </div>
+<script>
+  function calculate() {
+    const price = Number(document.getElementById('price').value);
+    const qty = Number(document.getElementById('qty').value);
+    const total = price * qty;
+    document.getElementById('result').textContent = '합계: $' + total;
+  }
+</script>
+</body>
+</html>

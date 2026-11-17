@@ -1,0 +1,57 @@
+BEGIN:VCARD
+VERSION:3.0
+N:김;서연;;;
+FN:김서연
+ORG:(주)바다로지스틱스 (BADA LOGISTICS)
+TITLE:해외영업팀 차장
+TEL;TYPE=CELL:010-2345-6789
+EMAIL;TYPE=INTERNET,WORK:seoyeon.kim@badalogi.co.kr
+ADR;TYPE=WORK:;;서울 중구 세종대로 110\, 12층;;;;한국
+NOTE:받은 날: 2026-11-07 · 박람회: 호치민 뷰티 박람회 · 직
+ 책 변경: 과장 → 차장
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:박;준호;;;
+FN:박준호
+ORG:그린팩토리 (GREEN FACTORY)
+TITLE:대표이사
+TEL;TYPE=CELL:010-9876-5432
+EMAIL;TYPE=INTERNET,WORK:jh.park@greenfactory.kr
+ADR;TYPE=WORK:;;경기 성남시 분당구 판교로 256;;;;한국
+NOTE:받은 날: 2026-11-07 · 박람회: 호치민 뷰티 박람회
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:Nguyen;Linh;;;
+FN:Linh Nguyen (린 응우옌)
+ORG:NOVA TRADING Co.\, Ltd.
+TITLE:Purchasing Manager
+TEL;TYPE=CELL:+84 90 123 4567
+EMAIL;TYPE=INTERNET,WORK:linh.nguyen@novatrading.vn
+ADR;TYPE=WORK:;;12 Le Loi St.\, District 1\, Ho Chi Minh City;;;;베트남
+NOTE:받은 날: 2026-11-07 · 박람회: 호치민 뷰티 박람회
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:이;지은;;;
+FN:이지은
+ORG:(주)한울화장품 (HANUL COSMETICS)
+TITLE:수출지원팀 대리
+TEL;TYPE=CELL:010-5555-1212
+EMAIL;TYPE=INTERNET,WORK:jieun.lee@hanulcos.com
+ADR;TYPE=WORK:;;충북 오송읍 오송생명로 200;;;;한국
+NOTE:받은 날: 2026-11-07 · 박람회: 호치민 뷰티 박람회
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:최;민수;;;
+FN:최민수
+ORG:케이포워딩 (K-FORWARDING)
+TITLE:물류팀 팀장
+TEL;TYPE=CELL:010-7777-3030
+TEL;TYPE=WORK,VOICE:02-555-0101
+EMAIL;TYPE=INTERNET,WORK:ms.choi@kfwd.co.kr
+ADR;TYPE=WORK:;;인천 중구 공항동로 296;;;;한국
+NOTE:받은 날: 2026-11-07 · 박람회: 호치민 뷰티 박람회
+END:VCARD

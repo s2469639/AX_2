@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tailwind 로 만든 카드</title>
+<!-- 연습용 Tailwind (Play CDN) — 실제 서비스에는 Next.js 안에 설치해서 써요 -->
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 font-sans p-10">
+  <div class="bg-white max-w-sm p-6 rounded-2xl shadow-xl">
+    <span class="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">(가상) 신규 문의</span>
+    <div class="text-2xl font-bold mt-3 mb-1.5">견적 요청 — 샘플 상품 A</div>
+    <p class="text-gray-500 leading-relaxed">수량 500개, 희망 납기 4주. 담당자 확인이 필요해요.</p>
+    <button class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-full">문의 확인하기</button>
+  </div>
+</body>
+</html>

@@ -1,0 +1,51 @@
+※ 연습용으로 지어낸 메일이에요. 회사 · 사람 · 주소는 모두 가상입니다.
+
+[메일 1]
+보낸 사람: Nguyen Thi Lan <lan@vina-beauty.example>
+제목: 수분크림 견적 요청 (3,000개)
+본문: 안녕하세요, 베트남 VinaBeauty 구매팀 Lan입니다. 수분크림 50ml(HG-101) 3,000개의 FOB 부산 단가와 납기를 알려 주세요. 샘플 5개도 받을 수 있을까요? 이번 주 금요일까지 회신 부탁드립니다.
+
+[메일 2]
+보낸 사람: Tom Baker <tom@abc-retail.example>
+제목: [Claim] Damaged cartons in 2nd shipment
+본문: Hello, 20 cartons of Sunscreen SPF50 (HG-301) in our 2nd shipment (PO-2611) arrived crushed. Photos attached. We need a replacement or a credit note ASAP. This is the second time this happened.
+
+[메일 3]
+보낸 사람: 김도윤 <dy.kim@hanbit-logis.example>
+제목: 11월 해상 운임 인상 안내
+본문: 안녕하세요, 한빛로지스 김도윤입니다. 11월 15일 선적분부터 부산-호치민 20ft 운임이 USD 80 인상됩니다. 일정 확인 부탁드립니다.
+
+[메일 4]
+보낸 사람: 쇼핑몰 <ad@deal-mall.example>
+제목: (광고) 오늘만 90% 할인! 지금 클릭하세요
+본문: 회원님만을 위한 특별 쿠폰이 도착했습니다. 지금 바로 클릭!
+
+[메일 5]
+보낸 사람: Hans Müller <h.mueller@berlinhaus.example>
+제목: Distribution agreement draft – please review
+본문: Hi, attached is the draft of the exclusive distribution agreement for Germany (2027–2029). Please review clauses 7 (minimum order) and 12 (termination) and send comments by Nov 10.
+
+[메일 6]
+보낸 사람: 무역뉴스 <news@trade-weekly.example>
+제목: [뉴스레터] 이번 주 K-뷰티 수출 동향
+본문: 이번 주 K-뷰티 수출 동향과 국가별 규제 소식을 전해 드립니다. 구독 해지는 하단 링크를 이용하세요.
+
+[메일 7]
+보낸 사람: Yuki Tanaka <tanaka@sakura-trading.example>
+제목: サンプルについて / About samples
+본문: Dear team, could you tell me the shelf life of Mask Pack (HG-201)? We also want to know if you can print Japanese labels.
+
+[메일 8]
+보낸 사람: 박서연 <sy.park@kbeauty-fair.example>
+제목: 바이어 상담회 참가 문의
+본문: 11월 27일 K-뷰티 바이어 상담회 참가 신청 마감이 11월 20일입니다. 참가 여부를 알려 주세요. 참가비는 없습니다.
+
+[메일 9]
+보낸 사람: Ahmed Ali <ahmed@gulf-cosmo.example>
+제목: Price inquiry – Serum and Lip balm
+본문: Hello, we are a distributor in Dubai. Please send your price list for Vitamin Serum (HG-401) and Lip Balm (HG-501), MOQ, and whether you have Halal certification.
+
+[메일 10]
+보낸 사람: 이준호 <jh.lee@hangyeol.example>
+제목: 내일 주간회의 자료 요청
+본문: 내일 오전 10시 주간회의 전에 지난주 실적 요약 1장 부탁해요. 매출, 문의 수, 특이사항 위주로요.

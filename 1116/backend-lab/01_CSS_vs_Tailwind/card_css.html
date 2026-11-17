@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSS 로 만든 카드</title>
+<style>
+  body { background: #f3f4f6; font-family: sans-serif; padding: 40px; }
+  .card { background: white; max-width: 360px; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+  .tag { display: inline-block; background: #dbeafe; color: #1d4ed8; font-size: 12px; padding: 2px 8px; border-radius: 999px; }
+  .title { font-size: 22px; font-weight: bold; margin: 12px 0 6px; }
+  .desc { color: #6b7280; line-height: 1.6; }
+  .btn { margin-top: 16px; background: #2563eb; color: white; border: 0; padding: 10px 16px; border-radius: 10px; cursor: pointer; }
+  .btn:hover { background: #1d4ed8; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="tag">(가상) 신규 문의</span>
+    <div class="title">견적 요청 — 샘플 상품 A</div>
+    <p class="desc">수량 500개, 희망 납기 4주. 담당자 확인이 필요해요.</p>
+    <button class="btn">문의 확인하기</button>
+  </div>
+</body>
+</html>
