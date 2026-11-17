@@ -40,6 +40,14 @@ class Conditions(BaseModel):
     gift_query: str | None = Field(default=None, description="선물 문서 검색용 짧은 문장 (특징·상황·휴대성 중심, 국적은 넣지 않음)")
 
 
+class GeneratedAnswer(BaseModel):
+    """답변 생성 결과. 요청에 맞는 후보가 없는 유형은 따로 표시한다."""
+    answer: str = Field(description="추천 답변 본문 (맞는 후보가 없는 유형은 쓰지 않음)")
+    no_match_types: list[Literal["restaurant", "gift"]] = Field(
+        default_factory=list,
+        description="후보 중 요청의 핵심(원하는 품목·음식 종류)에 맞는 것이 하나도 없는 유형")
+
+
 class GuestlyState(TypedDict, total=False):
     """그래프가 단계마다 주고받는 값."""
     question: str
@@ -51,6 +59,7 @@ class GuestlyState(TypedDict, total=False):
     sufficient: dict               # 유형별 근거 충분 여부
     etiquette: list                # 참고 의전 지침
     retry_count: int
+    no_match: list                 # 모델이 '맞는 후보 없음'으로 판단한 유형
     answer: str
     sources: list[str]
 
@@ -191,17 +200,105 @@ def generate(state: GuestlyState) -> dict:
          "형식: 유형별로 '**추천 식당**' 또는 '**추천 선물**' 제목 아래 번호 목록으로 2~3개. "
          "각 항목은 '이름 — 추천 이유 (가격대)' 한 줄과 필요하면 짧은 보충 한 줄. "
          "마지막에 '**주의사항**'으로 확인이 필요한 점을 2~4개 적어라.\n"
-         "가격 범위의 최대값이 예산을 넘으면 '예산 상한을 넘을 수 있음'이라고 알려라. "
+         "예산 초과 여부, 주소, 연락처는 쓰지 마라 (코드가 따로 붙인다). "
+         "추천 이유에는 대표 메뉴나 (식이 제한이 있으면) 비건·채식 메뉴를 자연스럽게 언급하라. "
          "국적으로 취향을 단정하지 말고, 반입 규정·영업 정보처럼 최신 확인이 필요한 내용은 '확인 필요'로 써라. "
-         "출처는 쓰지 마라 (따로 붙인다). 쉬운 한국어 존댓말로 간결하게."),
+         "출처는 쓰지 마라 (따로 붙인다). 쉬운 한국어 존댓말로 간결하게.\n"
+         "사용자가 원한 핵심 품목이나 음식 종류가 후보에 전혀 없으면(예: 골프 용품을 원했는데 후보가 차·김뿐) "
+         "그 유형은 다른 것으로 대신 추천하지 말고 답변에서 빼고 no_match_types에 넣어라. "
+         "조건이 일부만 맞는 정도라면 추천하고 맞지 않는 점을 주의사항에 적어라."),
         ("user", f"질문: {state['question']}\n조건: {json.dumps(conditions, ensure_ascii=False)}\n\n{context}"),
     ]
-    answer = llm.ask_text(messages, config.MAX_TOKENS_GENERATE, "generate").strip()
+    result = llm.ask_structured(messages, GeneratedAnswer, config.MAX_TOKENS_GENERATE, "generate")
+
+    # 모델이 '맞는 후보 없음'으로 판단한 유형은 근거 부족과 똑같이 처리한다
+    no_match = [t for t in result.no_match_types if t in ok_types]
+    ok_types = [t for t in ok_types if t not in no_match]
+    missing += no_match
+    if not ok_types:
+        return {"answer": config.NOT_FOUND_MESSAGE, "sources": [], "no_match": no_match}
+
+    answer = result.answer.strip()
+    candidates = [r for t in ok_types for r in state["results"][t]]
+    recommended = mentioned_in(answer, candidates)
+    answer += restaurant_info(recommended)
+    answer += budget_note(recommended, conditions)
     for doc_type in missing:
         answer += f"\n\n**{TYPE_NAMES[doc_type]}**: {config.NOT_FOUND_MESSAGE}"
 
-    used = [r for t in ok_types for r in state["results"][t]] + etiquette
-    return {"answer": answer, "sources": rag.sources_of(used), "etiquette": etiquette}
+    used = recommended + etiquette
+    return {"answer": answer, "sources": rag.sources_of(used),
+            "etiquette": etiquette, "no_match": no_match}
+
+
+def field_value(doc, key: str) -> str | None:
+    """원문에서 '- 키: 값' 줄의 값을 꺼낸다."""
+    for line in doc.metadata.get("full_text", "").splitlines():
+        if line.startswith(f"- {key}:"):
+            return line.split(":", 1)[1].strip()
+    return None
+
+
+def restaurant_info(recommended: list) -> str:
+    """추천한 식당의 주소·연락처·대표 메뉴·비건 메뉴를 데이터에서 그대로 꺼내 붙인다."""
+    blocks = []
+    for doc, _ in recommended:
+        if doc.metadata["doc_type"] != "restaurant":
+            continue
+        block = [f"- **{item_names(doc)[0]}** · {field_value(doc, '주소')} · {field_value(doc, '연락처')}",
+                 f"  - 대표 메뉴: {field_value(doc, '대표 메뉴')}"]
+        vegan = field_value(doc, "비건·채식 메뉴")
+        if vegan:
+            block.append(f"  - 비건·채식 메뉴: {vegan}")
+        blocks.append("\n".join(block))
+    if not blocks:
+        return ""
+    return "\n\n**식당 정보** (가상 데이터)\n" + "\n".join(blocks)
+
+
+def format_won(amount: int) -> str:
+    """70000 → '7만 원', 45000 → '4만 5천 원'처럼 읽기 쉬운 금액으로 바꾼다."""
+    man, rest = divmod(amount, 10000)
+    if rest == 0:
+        return f"{man}만 원"
+    if man and rest % 1000 == 0:
+        return f"{man}만 {rest // 1000}천 원"
+    return f"{amount:,}원"
+
+
+def budget_note(recommended: list, conditions: dict) -> str:
+    """추천 항목 중 가격 최대값이 예산을 넘는 것을 코드로 비교해 안내 문구를 만든다."""
+    lines = []
+    for doc, _ in recommended:
+        meta = doc.metadata
+        key = "restaurant_budget" if meta["doc_type"] == "restaurant" else "gift_budget"
+        budget = conditions.get(key)
+        if budget and meta.get("price_max", 0) > budget:
+            unit = "1인 " if meta["doc_type"] == "restaurant" else ""
+            lines.append(f"- {item_names(doc)[0]}: {unit}{format_won(meta['price_min'])}~"
+                         f"{format_won(meta['price_max'])}으로, 예산 {format_won(budget)}을 넘을 수 있어요.")
+    if not lines:
+        return ""
+    return "\n\n**예산 확인**\n" + "\n".join(lines)
+
+
+def item_names(doc) -> list[str]:
+    """항목의 이름 후보를 꺼낸다: 소제목 이름('한빛정')과 상품명 필드 값."""
+    names = [doc.metadata["heading"].split(" ", 1)[-1].split(" (")[0].strip()]
+    for line in doc.metadata.get("full_text", "").splitlines():
+        if line.startswith("- 상품명:"):
+            names.append(line.split(":", 1)[1].strip())
+    return names
+
+
+def mentioned_in(answer: str, candidates: list) -> list:
+    """답변에 이름이 실제로 나온 후보만, 답변에 나온 순서대로 남긴다 (하나도 못 찾으면 후보 전체)."""
+    def position(result) -> int:
+        """답변에서 그 항목 이름이 처음 나온 위치 (없으면 -1)."""
+        found = [answer.find(n) for n in item_names(result[0]) if n in answer]
+        return min(found) if found else -1
+    used = sorted((r for r in candidates if position(r) >= 0), key=position)
+    return used or candidates
 
 
 def build_graph():

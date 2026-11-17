@@ -1,0 +1,9 @@
+[theme]
+base = "light"
+primaryColor = "#B4432B"            # 단청 주홍
+backgroundColor = "#F5EFE3"         # 한지
+secondaryBackgroundColor = "#EAE1CF"
+textColor = "#1E2633"               # 먹색
+
+[browser]
+gatherUsageStats = false
