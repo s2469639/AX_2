@@ -221,14 +221,15 @@ restaurants.md > 식당 A > 15~24행
 
 ---
 
-## 7. 배포 (예정, 5단계 이후)
+## 7. 배포 (Streamlit Community Cloud)
 
 - 대상: **Streamlit Community Cloud**. Vercel은 서버리스 방식이라 Streamlit(서버가 계속 켜져 있고 브라우저와 연결 유지)과 맞지 않는다.
 - API 키: `.env` 대신 Streamlit Cloud의 Secrets에 `OPENAI_API_KEY`를 넣는다. 코드가 환경변수로 읽을 수 있는지 배포 시 확인한다. ⚠️
-- 벡터 파일: `store/vector_store.json`을 저장소에 커밋하는 방식을 우선 검토한다 (앱 시작 시 임베딩하면 "임베딩은 ingest.py에서만" 규칙과 충돌).
+- 벡터 파일: `store/vector_store.json`을 저장소에 커밋한다 (앱 시작 시 임베딩하면 "임베딩은 ingest.py에서만" 규칙과 충돌). `usage_log.jsonl`은 계속 제외한다.
 - 예산: 클라우드는 재시작 시 로컬 파일이 지워질 수 있어 `usage_log.jsonl` 기반 한도가 초기화될 수 있다. OpenAI 대시보드 사용 한도를 함께 설정한다.
 - 공개 범위: 앱을 비공개(초대한 사람만)로 두어 API 비용 남용을 막는다.
-- 실행 경로: 저장소 `AX_2` 안의 `1117 실습/app.py`.
+- 실행 경로: 저장소 `AX_2` 안의 `chatbot-buyer-in-korea/app.py`. 처음 폴더 이름 `1117 실습`(한글·공백)에서는 Cloud 패키지 설치가 실패해서 영문으로 바꿨다. 같은 requirements를 Linux + Python 3.11 조건으로 미리 설치 시험하면 정상이었으므로, 경로를 원인으로 추정한다 (미검증).
+- Python 버전: 3.11 선택 (LangChain·Streamlit 최신판 최소 요구 3.11).
 
 ---
 

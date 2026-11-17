@@ -1,0 +1,5 @@
+.env
+.venv/
+__pycache__/
+# 벡터 파일(store/vector_store.json)은 배포에 필요해서 올린다. 사용량 기록만 제외한다.
+store/usage_log.jsonl

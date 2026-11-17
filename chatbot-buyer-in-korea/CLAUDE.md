@@ -31,19 +31,30 @@
 - 처음 후보였던 `gpt-4.1-mini`와 GPT-5 mini는 공식 페이지에 Deprecated로 표시되어 바꿨다.
 - `gpt-6-luna`는 추론 모델이므로 `reasoning_effort="none"`으로 고정한다. 기획서의 "미사용" 원칙에서 바꾼 것이며 사용자가 승인했다.
 
-## 폴더 구조 (예정)
+## 폴더 구조
 
 ```
-1117 실습/
+chatbot-buyer-in-korea/
 ├─ CLAUDE.md          # 이 문서 — 프로젝트 목적과 공통 원칙
 ├─ .claude/rules/     # 보안·코드 작성·API 비용 규칙
 ├─ DESIGN.md          # 서비스 설계, RAG 데이터 구조, LangGraph 흐름
 ├─ 과제_안내.md        # 실행 방법, 학습 목표, 평가 항목
 ├─ 조사노트.md         # 공식 문서 확인 결과, 오류·해결, 실험 기록
-└─ data/              # 가상 연습용 Markdown 문서만 둔다
+├─ data/              # 가상 연습용 Markdown 문서만 둔다
+├─ store/             # vector_store.json(커밋), usage_log.jsonl(제외)
+├─ config.py          # 설정값
+├─ md_loader.py       # Markdown → 항목 조각, 줄 번호, 검색 글
+├─ ingest.py          # 임베딩 (변경분만)
+├─ rag.py             # 벡터 검색·필터·출처
+├─ llm.py             # 생성 모델 호출, 예산 확인
+├─ usage.py           # 사용량 기록
+├─ graph.py           # LangGraph 흐름
+├─ app.py             # Streamlit 화면 (실행: streamlit run app.py)
+├─ ui_style.py        # 화면 CSS
+└─ test_guestly.py    # 오프라인 점검
 ```
 
-코드 파일(`ingest.py`, 앱 등)은 문서 설계 단계가 끝나고 사용자 승인 후 작성한다.
+폴더 이름은 처음에 `1117 실습`이었다. Streamlit Cloud 배포 때문에 영문으로 바꿨다(2026-11-17).
 
 ## 개발 규칙
 
